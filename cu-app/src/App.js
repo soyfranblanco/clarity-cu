@@ -151,7 +151,7 @@ function Welcome({ go, lang, setLang }) {
 }
 
 // ── Register ─────────────────────────────────────────────────────────────────
-function Register({ go, setEmail: setParentEmail, lang }) {
+function Register({ go, setEmail: setParentEmail, lang, setLang }) {
   const es = lang === "es";
   const [f, setF] = useState({ nom: "", ape: "", email: "", pass: "" });
   const [loading, setLoading] = useState(false);
@@ -163,12 +163,12 @@ function Register({ go, setEmail: setParentEmail, lang }) {
     setLoading(true); setErr("");
     try {
       const emailClean = f.email.toLowerCase().trim();
-      if (!emailClean.endsWith("@cookunity.com")) {
-        setErr(es ? "Solo se permiten emails @cookunity.com." : "Only @cookunity.com emails are allowed.");
-        setLoading(false); return;
-      }
-      const exists = await dbFetch(`cu_usuarios?email=eq.${encodeURIComponent(emailClean)}&select=email`);
-      if (Array.isArray(exists) && exists.length > 0) { setErr(es ? "Ese email ya está registrado." : "Email already registered."); setLoading(false); return; }
+      const checkRes = await fetch("/api/update-usuario", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get-cu-usuario", email: emailClean })
+      });
+      const checkData = await checkRes.json();
+      if (Array.isArray(checkData) && checkData.length > 0) { setErr(es ? "Ese email ya está registrado." : "Email already registered."); setLoading(false); return; }
       const res = await fetch("/api/update-usuario", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "insert-cu-usuario", fields: { nombre: f.nom, apellido: f.ape, email: emailClean, password_hash: f.pass } })
@@ -218,7 +218,7 @@ function Register({ go, setEmail: setParentEmail, lang }) {
 }
 
 // ── Login ────────────────────────────────────────────────────────────────────
-function Login({ go, setEmail: setParentEmail, setDynamicUser, lang }) {
+function Login({ go, setEmail: setParentEmail, setDynamicUser, lang, setLang }) {
   const es = lang === "es";
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
@@ -231,9 +231,13 @@ function Login({ go, setEmail: setParentEmail, setDynamicUser, lang }) {
     if (!email || !pass) { setErr(es ? "Completá todos los campos." : "Please fill all fields."); return; }
     setLoading(true); setErr("");
     try {
-      const data = await dbFetch(`cu_usuarios?email=eq.${encodeURIComponent(email.toLowerCase().trim())}&select=*`);
-      if (!Array.isArray(data) || data.length === 0) { setErr(es ? "Email no encontrado." : "Email not found."); setLoading(false); return; }
-      const user = data[0];
+      const loginRes = await fetch("/api/update-usuario", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get-cu-usuario", email: email.toLowerCase().trim() })
+      });
+      const loginData = await loginRes.json();
+      if (!Array.isArray(loginData) || loginData.length === 0) { setErr(es ? "Email no encontrado." : "Email not found."); setLoading(false); return; }
+      const user = loginData[0];
       if (user.password_hash !== pass) { setErr(es ? "Contraseña incorrecta." : "Incorrect password."); setLoading(false); return; }
       setParentEmail(user.email);
       setDynamicUser(user);
@@ -275,7 +279,7 @@ function Login({ go, setEmail: setParentEmail, setDynamicUser, lang }) {
 }
 
 // ── Onboarding DH ────────────────────────────────────────────────────────────
-function Onboarding({ go, userEmail, setDynamicUser, lang }) {
+function Onboarding({ go, userEmail, setDynamicUser, lang, setLang }) {
   const es = lang === "es";
   const [f, setF] = useState({ fecha: "", hora: "", lugar: "" });
   const [loading, setLoading] = useState(false);
@@ -297,8 +301,12 @@ function Onboarding({ go, userEmail, setDynamicUser, lang }) {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "update-cu-usuario", email: userEmail, fields: { diseno } }),
       });
-      const updated = await dbFetch(`cu_usuarios?email=eq.${encodeURIComponent(userEmail)}&select=*`);
-      if (Array.isArray(updated) && updated[0]) setDynamicUser(updated[0]);
+      const updRes = await fetch("/api/update-usuario", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get-cu-usuario", email: userEmail })
+      });
+      const updData = await updRes.json();
+      if (Array.isArray(updData) && updData[0]) setDynamicUser(updData[0]);
       go("upload");
     } catch { setErr(es ? "Error de conexión." : "Connection error."); }
     setLoading(false);
@@ -334,7 +342,7 @@ function Onboarding({ go, userEmail, setDynamicUser, lang }) {
 }
 
 // ── Upload Performance Review ─────────────────────────────────────────────────
-function Upload({ go, userEmail, setDynamicUser, lang }) {
+function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
   const es = lang === "es";
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
@@ -350,8 +358,12 @@ function Upload({ go, userEmail, setDynamicUser, lang }) {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "update-cu-usuario", email: userEmail, fields: { performance_review: texto.trim() } }),
       });
-      const updated = await dbFetch(`cu_usuarios?email=eq.${encodeURIComponent(userEmail)}&select=*`);
-      if (Array.isArray(updated) && updated[0]) setDynamicUser(updated[0]);
+      const updRes = await fetch("/api/update-usuario", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get-cu-usuario", email: userEmail })
+      });
+      const updData = await updRes.json();
+      if (Array.isArray(updData) && updData[0]) setDynamicUser(updData[0]);
       go("chat");
     } catch { setErr(es ? "Error al guardar." : "Error saving."); }
     setLoading(false);
@@ -486,10 +498,14 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
     if (!userEmail) return;
     async function load() {
       try {
-        const data = await dbFetch(`cu_conversaciones?usuario_email=eq.${encodeURIComponent(userEmail)}&order=updated_at.desc&limit=1`);
-        if (Array.isArray(data) && data[0]?.mensajes?.length) {
-          setMsgs(data[0].mensajes);
-          setConvId(data[0].id);
+        const convRes = await fetch("/api/update-usuario", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "get-cu-conversacion", email: userEmail })
+        });
+        const convData = await convRes.json();
+        if (Array.isArray(convData) && convData[0]?.mensajes?.length) {
+          setMsgs(convData[0].mensajes);
+          setConvId(convData[0].id);
         }
       } catch {}
     }
@@ -730,10 +746,10 @@ export default function App() {
     <div>
       <style>{"*{box-sizing:border-box;margin:0;padding:0}body{background:#1A1A1A}"}</style>
       {screen === "welcome" && <Welcome go={go} lang={lang} setLang={setLang} />}
-      {screen === "register" && <Register go={go} setEmail={setEmail} lang={lang} />}
-      {screen === "login" && <Login go={go} setEmail={setEmail} setDynamicUser={setDynamicUser} lang={lang} />}
-      {screen === "onboarding" && <Onboarding go={go} userEmail={email} setDynamicUser={setDynamicUser} lang={lang} />}
-      {screen === "upload" && <Upload go={go} userEmail={email} setDynamicUser={setDynamicUser} lang={lang} />}
+      {screen === "register" && <Register go={go} setEmail={setEmail} lang={lang} setLang={setLang} />}
+      {screen === "login" && <Login go={go} setEmail={setEmail} setDynamicUser={setDynamicUser} lang={lang} setLang={setLang} />}
+      {screen === "onboarding" && <Onboarding go={go} userEmail={email} setDynamicUser={setDynamicUser} lang={lang} setLang={setLang} />}
+      {screen === "upload" && <Upload go={go} userEmail={email} setDynamicUser={setDynamicUser} lang={lang} setLang={setLang} />}
       {screen === "chat" && <Chat go={go} userEmail={email} dynamicUser={dynamicUser} lang={lang} setLang={setLang} />}
     </div>
   );
