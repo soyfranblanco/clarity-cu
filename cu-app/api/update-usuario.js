@@ -53,6 +53,30 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
     }
 
+    // ── CookUnity: actualizar cu_usuarios ──────────────────────────────
+    if (action === "update-cu-usuario") {
+      if (!email || !fields) return res.status(400).json({ error: "Faltan email o fields" });
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/cu_usuarios?email=eq.${encodeURIComponent(email)}`, {
+        method: "PATCH", headers,
+        body: JSON.stringify(fields)
+      });
+      const data = await r.json();
+      if (!r.ok) return res.status(r.status).json({ error: data });
+      return res.status(200).json(data);
+    }
+
+    // ── CookUnity: insertar conversación ───────────────────────────────
+    if (action === "insert-cu-conversacion") {
+      if (!email || !mensajes) return res.status(400).json({ error: "Faltan email o mensajes" });
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/cu_conversaciones`, {
+        method: "POST", headers,
+        body: JSON.stringify({ usuario_email: email, mensajes })
+      });
+      const data = await r.json();
+      if (!r.ok) return res.status(r.status).json({ error: data });
+      return res.status(200).json(data);
+    }
+
     return res.status(400).json({ error: "Acción no reconocida" });
 
   } catch (error) {
