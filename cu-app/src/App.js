@@ -162,13 +162,19 @@ function Register({ go, setEmail: setParentEmail, lang }) {
     if (!f.nom || !f.email || !f.pass) { setErr(es ? "Completá todos los campos." : "Please fill all fields."); return; }
     setLoading(true); setErr("");
     try {
-      const exists = await dbFetch(`cu_usuarios?email=eq.${encodeURIComponent(f.email)}&select=email`);
+      const emailClean = f.email.toLowerCase().trim();
+      if (!emailClean.endsWith("@cookunity.com")) {
+        setErr(es ? "Solo se permiten emails @cookunity.com." : "Only @cookunity.com emails are allowed.");
+        setLoading(false); return;
+      }
+      const exists = await dbFetch(`cu_usuarios?email=eq.${encodeURIComponent(emailClean)}&select=email`);
       if (Array.isArray(exists) && exists.length > 0) { setErr(es ? "Ese email ya está registrado." : "Email already registered."); setLoading(false); return; }
-      await dbFetch("cu_usuarios", {
-        method: "POST",
-        body: JSON.stringify({ nombre: f.nom, apellido: f.ape, email: f.email.toLowerCase().trim(), password_hash: f.pass }),
+      const res = await fetch("/api/update-usuario", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "insert-cu-usuario", fields: { nombre: f.nom, apellido: f.ape, email: emailClean, password_hash: f.pass } })
       });
-      setParentEmail(f.email.toLowerCase().trim());
+      if (!res.ok) { setErr(es ? "Error al registrar." : "Registration error."); setLoading(false); return; }
+      setParentEmail(emailClean);
       go("onboarding");
     } catch { setErr(es ? "Error al registrar. Intentá de nuevo." : "Registration error. Please try again."); }
     setLoading(false);
@@ -179,7 +185,17 @@ function Register({ go, setEmail: setParentEmail, lang }) {
   return (
     <div style={{ minHeight: "100vh", background: CU_DARK, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
       <div style={{ width: "100%", maxWidth: 420 }}>
-        <button onClick={() => go("welcome")} style={{ background: "none", border: "none", color: "rgba(255,255,255,.3)", cursor: "pointer", fontFamily: "monospace", fontSize: ".55rem", marginBottom: "2rem", letterSpacing: ".15em" }}>← {es ? "Volver" : "Back"}</button>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+          <button onClick={() => go("welcome")} style={{ background: "none", border: "none", color: "rgba(255,255,255,.3)", cursor: "pointer", fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".15em" }}>← {es ? "Volver" : "Back"}</button>
+          <div style={{ display: "flex", gap: ".4rem" }}>
+            {["es", "en"].map(l => (
+              <button key={l} onClick={() => setLang(l)}
+                style={{ background: lang === l ? "rgba(245,166,35,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
+                {l}
+              </button>
+            ))}
+          </div>
+        </div>
         <div style={{ border: "1px solid rgba(245,166,35,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)" }}>
           <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".4rem" }}>{es ? "Crear cuenta" : "Create account"}</div>
           <div style={{ color: C.dim, fontSize: ".8rem", marginBottom: "1.8rem", fontFamily: NUNITO }}>{es ? "Empleados de CookUnity" : "CookUnity employees"}</div>
@@ -231,7 +247,17 @@ function Login({ go, setEmail: setParentEmail, setDynamicUser, lang }) {
   return (
     <div style={{ minHeight: "100vh", background: CU_DARK, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
       <div style={{ width: "100%", maxWidth: 420 }}>
-        <button onClick={() => go("welcome")} style={{ background: "none", border: "none", color: "rgba(255,255,255,.3)", cursor: "pointer", fontFamily: "monospace", fontSize: ".55rem", marginBottom: "2rem", letterSpacing: ".15em" }}>← {es ? "Volver" : "Back"}</button>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+          <button onClick={() => go("welcome")} style={{ background: "none", border: "none", color: "rgba(255,255,255,.3)", cursor: "pointer", fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".15em" }}>← {es ? "Volver" : "Back"}</button>
+          <div style={{ display: "flex", gap: ".4rem" }}>
+            {["es", "en"].map(l => (
+              <button key={l} onClick={() => setLang(l)}
+                style={{ background: lang === l ? "rgba(245,166,35,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
+                {l}
+              </button>
+            ))}
+          </div>
+        </div>
         <div style={{ border: "1px solid rgba(245,166,35,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)" }}>
           <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".4rem" }}>{es ? "Ingresar" : "Sign in"}</div>
           <div style={{ color: C.dim, fontSize: ".8rem", marginBottom: "1.8rem", fontFamily: NUNITO }}>CookUnity</div>
@@ -340,7 +366,7 @@ function Upload({ go, userEmail, setDynamicUser, lang }) {
         r.onerror = () => rej(new Error("Read failed"));
         r.readAsDataURL(file);
       });
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
