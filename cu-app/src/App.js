@@ -178,6 +178,11 @@ function Register({ go, setEmail: setParentEmail, lang, setLang }) {
       });
       if (!res.ok) { setErr(es ? "Error al registrar." : "Registration error."); setLoading(false); return; }
       setParentEmail(emailClean);
+      // Send verification email
+      fetch("/api/send-verification", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailClean, nombre: f.nom, lang })
+      }).catch(() => {});
       go("pending");
     } catch { setErr(es ? "Error al registrar. Intentá de nuevo." : "Registration error. Please try again."); }
     setLoading(false);
@@ -832,8 +837,12 @@ function Pending({ go, email, lang, setLang }) {
 
 // ── App Root ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [screen, setScreen] = useState("welcome");
-  const [email, setEmail] = useState("");
+  const params = new URLSearchParams(window.location.search);
+  const verifiedEmail = params.get("email");
+  const isVerified = params.get("verified") === "true";
+
+  const [screen, setScreen] = useState(isVerified && verifiedEmail ? "onboarding" : "welcome");
+  const [email, setEmail] = useState(isVerified && verifiedEmail ? decodeURIComponent(verifiedEmail) : "");
   const [dynamicUser, setDynamicUser] = useState(null);
   const [lang, setLang] = useState("es");
 
