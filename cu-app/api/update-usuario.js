@@ -54,6 +54,18 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
     }
 
+    // ── CookUnity: actualizar conversación existente ──────────────────
+    if (action === "update-cu-conversacion") {
+      if (!id || !mensajes) return res.status(400).json({ error: "Faltan id o mensajes" });
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/cu_conversaciones?id=eq.${id}`, {
+        method: "PATCH", headers,
+        body: JSON.stringify({ mensajes, updated_at: new Date().toISOString() })
+      });
+      const data = await r.json();
+      if (!r.ok) return res.status(r.status).json({ error: data });
+      return res.status(200).json(data);
+    }
+
     // ── CookUnity: obtener usuario ─────────────────────────────────────
     if (action === "get-cu-usuario") {
       if (!email) return res.status(400).json({ error: "Falta email" });
