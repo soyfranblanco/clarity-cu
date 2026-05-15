@@ -354,7 +354,7 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
     if (!texto.trim()) { setErr(es ? "El contenido está vacío." : "Content is empty."); return; }
     setLoading(true); setErr("");
     try {
-      console.log("Guardando review para:", userEmail, "chars:", texto.trim().length);
+      console.log("Guardando review para:", userEmail, "texto chars:", texto.trim().length, "modo:", modo);
       const saveRes = await fetch("/api/update-usuario", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "update-cu-usuario", email: userEmail, fields: { performance_review: texto.trim() } }),
@@ -367,7 +367,7 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
       const updData = await updRes.json();
       if (Array.isArray(updData) && updData[0]) setDynamicUser(updData[0]);
       go("chat");
-    } catch { setErr(es ? "Error al guardar." : "Error saving."); }
+    } catch(e) { console.error("Error guardar:", e); setErr(es ? "Error al guardar: " + e.message : "Error saving: " + e.message); }
     setLoading(false);
   }
 
@@ -428,6 +428,7 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
           <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".4rem" }}>
             {es ? "Tu performance review" : "Your performance review"}
           </div>
+          {process.env.NODE_ENV === "development" && <div style={{ color: "red", fontSize: ".7rem" }}>debug: {userEmail}</div>}
           <div style={{ color: C.dim, fontSize: ".82rem", marginBottom: "1.5rem", fontFamily: NUNITO, lineHeight: 1.6 }}>
             {es
               ? "Subí tu performance review. La IA lo usará junto a tu Diseño Humano para darte estrategias personalizadas."
@@ -496,7 +497,7 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
 // ── Chat ─────────────────────────────────────────────────────────────────────
 function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
   const es = lang === "es";
-  const user = dynamicUser;
+  const [user, setUser] = useState(dynamicUser);
   const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -668,7 +669,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
             <div style={{ display: "flex", justifyContent: "flex-end", padding: "1rem 1.5rem 0" }}>
               <button onClick={() => setShowUpload(false)} style={{ background: "none", border: "none", color: dim, cursor: "pointer", fontSize: "1.2rem" }}>×</button>
             </div>
-            <Upload go={(s) => { setShowUpload(false); if (s === "chat") { window.location.reload(); } }} userEmail={userEmail} setDynamicUser={setDynamicUser} lang={lang} setLang={setLang} />
+            <Upload go={(s) => { setShowUpload(false); }} userEmail={userEmail} setDynamicUser={(u) => { setUser(u); setShowUpload(false); }} lang={lang} setLang={setLang} />
           </div>
         </div>
       )}
