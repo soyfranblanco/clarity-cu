@@ -589,7 +589,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
       if (currentId) {
         await fetch("/api/update-usuario", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "update-conversacion", id: currentId, mensajes })
+          body: JSON.stringify({ action: "update-cu-conversacion", id: currentId, mensajes })
         });
         return currentId;
       } else {
