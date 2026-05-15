@@ -56,6 +56,9 @@ Tenés acceso a tres fuentes de información sobre esta persona:
 2. Su performance review — qué hizo bien, dónde mejorar, el feedback concreto de su manager
 3. Los Leadership Principles de CookUnity — los valores y comportamientos que la empresa espera
 
+VALIDACIÓN DE IDENTIDAD — MUY IMPORTANTE:
+Al inicio de cada conversación o cuando recibas el performance review, verificá si el nombre del empleado registrado coincide con el nombre de la persona evaluada en el review. Si detectás una discrepancia (por ejemplo, el usuario se llama "Juan García" pero el review es de "María López"), mencionalo de forma amable y directa: "Noto que tu nombre no coincide con el del review. ¿Es tuyo este documento?" No bloquees la conversación, pero sí dejá claro lo que observás.
+
 TU TRABAJO:
 - Cruzar estas tres fuentes para dar orientación concreta y personalizada
 - Ayudar al empleado a entender cómo mejorar sus puntos débiles de una forma que respete su diseño
@@ -371,8 +374,31 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
     setLoading(false);
   }
 
+  const [loadingMsg, setLoadingMsg] = useState(0);
+  const PDF_MSGS_ES = [
+    "Preparate un buen café mientras analizamos el documento...",
+    "Leyendo tu review con atención...",
+    "Procesando el feedback de tu manager...",
+    "Casi listo, extrayendo los puntos clave...",
+    "Un momento más, vale la pena la espera...",
+  ];
+  const PDF_MSGS_EN = [
+    "Grab a coffee while we analyze your document...",
+    "Reading your review carefully...",
+    "Processing your manager's feedback...",
+    "Almost done, extracting key points...",
+    "Just a moment more, it's worth the wait...",
+  ];
+
   async function parsePDF(file) {
-    setLoading(true); setErr("");
+    if (file.size > 5 * 1024 * 1024) {
+      setErr(es ? "El PDF supera los 5MB. Intentá con un archivo más liviano." : "PDF exceeds 5MB. Please try a lighter file.");
+      return;
+    }
+    setLoading(true); setErr(""); setLoadingMsg(0);
+    const msgInterval = setInterval(() => {
+      setLoadingMsg(prev => prev < (es ? PDF_MSGS_ES.length - 1 : PDF_MSGS_EN.length - 1) ? prev + 1 : prev);
+    }, 4000);
     try {
       const base64 = await new Promise((res, rej) => {
         const r = new FileReader();
@@ -415,6 +441,7 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
       console.error("Error parsePDF:", e);
       setErr(es ? "Error al leer el PDF: " + e.message : "Error reading PDF: " + e.message);
     }
+    clearInterval(msgInterval);
     setLoading(false);
   }
 
@@ -428,7 +455,6 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
           <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".4rem" }}>
             {es ? "Tu performance review" : "Your performance review"}
           </div>
-          {process.env.NODE_ENV === "development" && <div style={{ color: "red", fontSize: ".7rem" }}>debug: {userEmail}</div>}
           <div style={{ color: C.dim, fontSize: ".82rem", marginBottom: "1.5rem", fontFamily: NUNITO, lineHeight: 1.6 }}>
             {es
               ? "Subí tu performance review. La IA lo usará junto a tu Diseño Humano para darte estrategias personalizadas."
@@ -451,11 +477,17 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
                 onMouseEnter={e => e.currentTarget.style.borderColor = CU_ORANGE}
                 onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(245,166,35,.3)"}>
                 <input type="file" accept=".pdf" style={{ display: "none" }} onChange={e => e.target.files[0] && parsePDF(e.target.files[0])} />
-                {loading ? (es ? "Leyendo PDF..." : "Reading PDF...") : (
+                {loading ? (
+                  <div style={{ lineHeight: 1.7 }}>
+                    <div style={{ fontSize: "1.2rem", marginBottom: ".5rem" }}>⏳</div>
+                    <div>{es ? PDF_MSGS_ES[loadingMsg] : PDF_MSGS_EN[loadingMsg]}</div>
+                    <div style={{ fontSize: ".7rem", marginTop: ".5rem", opacity: .5 }}>{es ? "Esto puede tardar hasta 30 segundos" : "This may take up to 30 seconds"}</div>
+                  </div>
+                ) : (
                   <>
                     <div style={{ fontSize: "1.5rem", marginBottom: ".5rem" }}>📄</div>
                     {es ? "Hacé clic para seleccionar tu PDF" : "Click to select your PDF"}
-                    <div style={{ fontSize: ".75rem", marginTop: ".3rem", opacity: .6 }}>{es ? "Solo archivos PDF" : "PDF files only"}</div>
+                    <div style={{ fontSize: ".75rem", marginTop: ".3rem", opacity: .6 }}>{es ? "Solo archivos PDF · Máx. 5MB" : "PDF files only · Max. 5MB"}</div>
                   </>
                 )}
               </label>
@@ -611,7 +643,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
       `}</style>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: ".9rem 2rem", borderBottom: `1px solid rgba(245,166,35,.12)`, background: panelBg }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: ".9rem 2rem", borderBottom: `1px solid rgba(245,166,35,.12)`, background: panelBg, position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <div style={{ fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".3em", color: CU_ORANGE, fontWeight: 700 }}>COOK × UNITY</div>
           {hasDH && (
