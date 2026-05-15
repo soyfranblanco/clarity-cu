@@ -178,7 +178,7 @@ function Register({ go, setEmail: setParentEmail, lang, setLang }) {
       });
       if (!res.ok) { setErr(es ? "Error al registrar." : "Registration error."); setLoading(false); return; }
       setParentEmail(emailClean);
-      go("onboarding");
+      go("pending");
     } catch { setErr(es ? "Error al registrar. Intentá de nuevo." : "Registration error. Please try again."); }
     setLoading(false);
   }
@@ -317,6 +317,14 @@ function Onboarding({ go, userEmail, setDynamicUser, lang, setLang }) {
 
   return (
     <div style={{ minHeight: "100vh", background: CU_DARK, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+      <div style={{ position: "absolute", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".4rem" }}>
+        {["es", "en"].map(l => (
+          <button key={l} onClick={() => setLang(l)}
+            style={{ background: lang === l ? "rgba(245,166,35,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
+            {l}
+          </button>
+        ))}
+      </div>
       <div style={{ width: "100%", maxWidth: 480 }}>
         <div style={{ border: "1px solid rgba(245,166,35,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)" }}>
           <div style={{ fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".3em", color: CU_ORANGE, marginBottom: ".5rem", textTransform: "uppercase" }}>
@@ -357,12 +365,10 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
     if (!texto.trim()) { setErr(es ? "El contenido está vacío." : "Content is empty."); return; }
     setLoading(true); setErr("");
     try {
-      console.log("Guardando review para:", userEmail, "texto chars:", texto.trim().length, "modo:", modo);
       const saveRes = await fetch("/api/update-usuario", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "update-cu-usuario", email: userEmail, fields: { performance_review: texto.trim() } }),
       });
-      console.log("Save status:", saveRes.status);
       const updRes = await fetch("/api/update-usuario", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "get-cu-usuario", email: userEmail })
@@ -406,7 +412,6 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
         r.onerror = () => rej(new Error("Read failed"));
         r.readAsDataURL(file);
       });
-      console.log("PDF leído, enviando a API...");
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -422,7 +427,6 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
           }]
         })
       });
-      console.log("Respuesta API:", response.status);
       if (!response.ok) {
         const errText = await response.text();
         console.error("Error API:", errText);
@@ -430,7 +434,6 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
         setLoading(false); return;
       }
       const data = await response.json();
-      console.log("Data recibida:", data?.content?.[0]?.type);
       const extracted = data.content?.[0]?.text || "";
       if (!extracted) {
         setErr(es ? "No se pudo extraer texto del PDF." : "Could not extract text from PDF.");
@@ -447,6 +450,14 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
 
   return (
     <div style={{ minHeight: "100vh", background: CU_DARK, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+      <div style={{ position: "absolute", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".4rem" }}>
+        {["es", "en"].map(l => (
+          <button key={l} onClick={() => setLang(l)}
+            style={{ background: lang === l ? "rgba(245,166,35,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
+            {l}
+          </button>
+        ))}
+      </div>
       <div style={{ width: "100%", maxWidth: 560 }}>
         <div style={{ border: "1px solid rgba(245,166,35,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)" }}>
           <div style={{ fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".3em", color: CU_ORANGE, marginBottom: ".5rem", textTransform: "uppercase" }}>
@@ -784,6 +795,41 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
   );
 }
 
+// ── Pending verification screen ──────────────────────────────────────────────
+function Pending({ go, email, lang, setLang }) {
+  const es = lang === "es";
+  return (
+    <div style={{ minHeight: "100vh", background: CU_DARK, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+      <div style={{ position: "absolute", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".4rem" }}>
+        {["es", "en"].map(l => (
+          <button key={l} onClick={() => setLang(l)}
+            style={{ background: lang === l ? "rgba(245,166,35,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
+            {l}
+          </button>
+        ))}
+      </div>
+      <div style={{ width: "100%", maxWidth: 420, textAlign: "center" }}>
+        <div style={{ fontSize: "2.5rem", marginBottom: "1.5rem" }}>📬</div>
+        <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".8rem" }}>
+          {es ? "Revisá tu email" : "Check your email"}
+        </div>
+        <div style={{ color: "rgba(240,235,224,.45)", fontSize: ".85rem", fontFamily: NUNITO, lineHeight: 1.7, marginBottom: "2rem" }}>
+          {es
+            ? `Te enviamos un link de verificación a ${email}. Hacé clic en el link para activar tu cuenta y continuar.`
+            : `We sent a verification link to ${email}. Click the link to activate your account and continue.`}
+        </div>
+        <div style={{ color: "rgba(240,235,224,.3)", fontSize: ".75rem", fontFamily: NUNITO, marginBottom: "1.5rem" }}>
+          {es ? "¿No lo encontrás? Revisá la carpeta de spam." : "Can't find it? Check your spam folder."}
+        </div>
+        <button onClick={() => go("onboarding")}
+          style={{ background: "transparent", border: `1px solid rgba(245,166,35,.3)`, borderRadius: 24, color: "rgba(240,235,224,.4)", fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".2em", padding: ".7em 1.5em", cursor: "pointer", textTransform: "uppercase" }}>
+          {es ? "Continuar sin verificar →" : "Continue without verifying →"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── App Root ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen, setScreen] = useState("welcome");
@@ -799,6 +845,7 @@ export default function App() {
       {screen === "welcome" && <Welcome go={go} lang={lang} setLang={setLang} />}
       {screen === "register" && <Register go={go} setEmail={setEmail} lang={lang} setLang={setLang} />}
       {screen === "login" && <Login go={go} setEmail={setEmail} setDynamicUser={setDynamicUser} lang={lang} setLang={setLang} />}
+      {screen === "pending" && <Pending go={go} email={email} lang={lang} setLang={setLang} />}
       {screen === "onboarding" && <Onboarding go={go} userEmail={email} setDynamicUser={setDynamicUser} lang={lang} setLang={setLang} />}
       {screen === "upload" && <Upload go={go} userEmail={email} setDynamicUser={setDynamicUser} lang={lang} setLang={setLang} />}
       {screen === "chat" && <Chat go={go} userEmail={email} dynamicUser={dynamicUser} lang={lang} setLang={setLang} />}
