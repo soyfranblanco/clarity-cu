@@ -354,10 +354,12 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
     if (!texto.trim()) { setErr(es ? "El contenido está vacío." : "Content is empty."); return; }
     setLoading(true); setErr("");
     try {
-      await fetch("/api/update-usuario", {
+      console.log("Guardando review para:", userEmail, "chars:", texto.trim().length);
+      const saveRes = await fetch("/api/update-usuario", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "update-cu-usuario", email: userEmail, fields: { performance_review: texto.trim() } }),
       });
+      console.log("Save status:", saveRes.status);
       const updRes = await fetch("/api/update-usuario", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "get-cu-usuario", email: userEmail })
@@ -378,6 +380,7 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
         r.onerror = () => rej(new Error("Read failed"));
         r.readAsDataURL(file);
       });
+      console.log("PDF leído, enviando a API...");
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -393,10 +396,25 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
           }]
         })
       });
+      console.log("Respuesta API:", response.status);
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("Error API:", errText);
+        setErr(es ? "Error al procesar el PDF." : "Error processing PDF.");
+        setLoading(false); return;
+      }
       const data = await response.json();
+      console.log("Data recibida:", data?.content?.[0]?.type);
       const extracted = data.content?.[0]?.text || "";
+      if (!extracted) {
+        setErr(es ? "No se pudo extraer texto del PDF." : "Could not extract text from PDF.");
+        setLoading(false); return;
+      }
       setTexto(extracted);
-    } catch { setErr(es ? "Error al leer el PDF." : "Error reading PDF."); }
+    } catch(e) {
+      console.error("Error parsePDF:", e);
+      setErr(es ? "Error al leer el PDF: " + e.message : "Error reading PDF: " + e.message);
+    }
     setLoading(false);
   }
 
@@ -650,7 +668,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
             <div style={{ display: "flex", justifyContent: "flex-end", padding: "1rem 1.5rem 0" }}>
               <button onClick={() => setShowUpload(false)} style={{ background: "none", border: "none", color: dim, cursor: "pointer", fontSize: "1.2rem" }}>×</button>
             </div>
-            <Upload go={() => setShowUpload(false)} userEmail={userEmail} setDynamicUser={() => {}} lang={lang} />
+            <Upload go={(s) => { setShowUpload(false); if (s === "chat") { window.location.reload(); } }} userEmail={userEmail} setDynamicUser={setDynamicUser} lang={lang} setLang={setLang} />
           </div>
         </div>
       )}
