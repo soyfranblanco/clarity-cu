@@ -14,11 +14,7 @@ export default async function handler(req, res) {
       "Content-Type": "application/json",
       "Prefer": "return=representation"
     };
-    const cuHeaders = {
-      ...headers,
-      "Accept-Profile": "cookunity",
-      "Content-Profile": "cookunity",
-    };
+
 
     const { action, email, fields, id, mensajes, modo } = req.body;
 
@@ -62,7 +58,7 @@ export default async function handler(req, res) {
     if (action === "get-cu-usuario") {
       if (!email) return res.status(400).json({ error: "Falta email" });
       const r = await fetch(`${SUPABASE_URL}/rest/v1/cu_usuarios?email=eq.${encodeURIComponent(email)}&select=*`, {
-        headers: cuHeaders
+        headers
       });
       const data = await r.json();
       if (!r.ok) return res.status(r.status).json({ error: data });
@@ -73,7 +69,7 @@ export default async function handler(req, res) {
     if (action === "get-cu-conversacion") {
       if (!email) return res.status(400).json({ error: "Falta email" });
       const r = await fetch(`${SUPABASE_URL}/rest/v1/cu_conversaciones?usuario_email=eq.${encodeURIComponent(email)}&order=updated_at.desc&limit=1`, {
-        headers: cuHeaders
+        headers
       });
       const data = await r.json();
       if (!r.ok) return res.status(r.status).json({ error: data });
@@ -84,7 +80,7 @@ export default async function handler(req, res) {
     if (action === "insert-cu-usuario") {
       if (!fields) return res.status(400).json({ error: "Faltan fields" });
       const r = await fetch(`${SUPABASE_URL}/rest/v1/cu_usuarios`, {
-        method: "POST", headers: cuHeaders,
+        method: "POST", headers,
         body: JSON.stringify(fields)
       });
       const data = await r.json();
@@ -96,7 +92,7 @@ export default async function handler(req, res) {
     if (action === "update-cu-usuario") {
       if (!email || !fields) return res.status(400).json({ error: "Faltan email o fields" });
       const r = await fetch(`${SUPABASE_URL}/rest/v1/cu_usuarios?email=eq.${encodeURIComponent(email)}`, {
-        method: "PATCH", headers: cuHeaders,
+        method: "PATCH", headers,
         body: JSON.stringify(fields)
       });
       const data = await r.json();
@@ -108,7 +104,7 @@ export default async function handler(req, res) {
     if (action === "insert-cu-conversacion") {
       if (!email || !mensajes) return res.status(400).json({ error: "Faltan email o mensajes" });
       const r = await fetch(`${SUPABASE_URL}/rest/v1/cu_conversaciones`, {
-        method: "POST", headers: cuHeaders,
+        method: "POST", headers,
         body: JSON.stringify({ usuario_email: email, mensajes })
       });
       const data = await r.json();
