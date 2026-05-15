@@ -53,6 +53,28 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
     }
 
+    // ── CookUnity: obtener usuario ─────────────────────────────────────
+    if (action === "get-cu-usuario") {
+      if (!email) return res.status(400).json({ error: "Falta email" });
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/cu_usuarios?email=eq.${encodeURIComponent(email)}&select=*`, {
+        headers
+      });
+      const data = await r.json();
+      if (!r.ok) return res.status(r.status).json({ error: data });
+      return res.status(200).json(data);
+    }
+
+    // ── CookUnity: obtener conversación ────────────────────────────────
+    if (action === "get-cu-conversacion") {
+      if (!email) return res.status(400).json({ error: "Falta email" });
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/cu_conversaciones?usuario_email=eq.${encodeURIComponent(email)}&order=updated_at.desc&limit=1`, {
+        headers
+      });
+      const data = await r.json();
+      if (!r.ok) return res.status(r.status).json({ error: data });
+      return res.status(200).json(data);
+    }
+
     // ── CookUnity: crear usuario nuevo ─────────────────────────────────
     if (action === "insert-cu-usuario") {
       if (!fields) return res.status(400).json({ error: "Faltan fields" });
