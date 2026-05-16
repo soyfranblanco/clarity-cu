@@ -100,6 +100,41 @@ async function dbFetch(endpoint, opts = {}) {
 }
 
 // ── Welcome Screen ───────────────────────────────────────────────────────────
+// ── PasswordField component ──────────────────────────────────────────────────
+function PasswordField({ placeholder, value, onChange, onEnter, style }) {
+  const [show, setShow] = React.useState(false);
+  return (
+    <div style={{ position: "relative", marginBottom: style?.marginBottom || ".8rem" }}>
+      <input
+        type={show ? "text" : "password"}
+        placeholder={placeholder}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        onKeyDown={e => e.key === "Enter" && onEnter && onEnter()}
+        style={{ ...style, marginBottom: 0, paddingRight: "2.5rem" }}
+      />
+      <button
+        type="button"
+        onClick={() => setShow(v => !v)}
+        style={{ position: "absolute", right: "0.7rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(240,235,224,.4)", fontSize: "1rem", padding: 0, lineHeight: 1 }}>
+        {show ? "🙈" : "👁"}
+      </button>
+    </div>
+  );
+}
+
+// ── HourglassAnim component ───────────────────────────────────────────────────
+function HourglassAnim() {
+  const [frame, setFrame] = React.useState(0);
+  const frames = ["⏳", "⌛"];
+  React.useEffect(() => {
+    const t = setInterval(() => setFrame(f => (f + 1) % 2), 800);
+    return () => clearInterval(t);
+  }, []);
+  return <div style={{ fontSize: "1.5rem", marginBottom: ".5rem" }}>{frames[frame]}</div>;
+}
+
+// ── Welcome ───────────────────────────────────────────────────────────────────
 function Welcome({ go, lang, setLang }) {
   const es = lang === "es";
   return (
@@ -163,6 +198,8 @@ function Register({ go, setEmail: setParentEmail, lang, setLang }) {
 
   async function submit() {
     if (!f.nom || !f.email || !f.pass) { setErr(es ? "Completá todos los campos." : "Please fill all fields."); return; }
+    if (f.pass !== f.pass2) { setErr(es ? "Las contraseñas no coinciden." : "Passwords don't match."); return; }
+    if (f.pass.length < 6) { setErr(es ? "La contraseña debe tener al menos 6 caracteres." : "Password must be at least 6 characters."); return; }
     setLoading(true); setErr("");
     try {
       const emailClean = f.email.toLowerCase().trim();
@@ -213,7 +250,20 @@ function Register({ go, setEmail: setParentEmail, lang, setLang }) {
           </div>
           <div style={{ height: ".8rem" }} />
           <input type="email" placeholder="Email" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} style={inp} />
-          <input type="password" placeholder={es ? "Contraseña" : "Password"} value={f.pass} onChange={e => setF({ ...f, pass: e.target.value })} onKeyDown={e => e.key === "Enter" && submit()} style={inp} />
+          <PasswordField
+            placeholder={es ? "Contraseña" : "Password"}
+            value={f.pass}
+            onChange={v => setF({ ...f, pass: v })}
+            onEnter={submit}
+            style={inp}
+          />
+          <PasswordField
+            placeholder={es ? "Repetir contraseña" : "Confirm password"}
+            value={f.pass2 || ""}
+            onChange={v => setF({ ...f, pass2: v })}
+            onEnter={submit}
+            style={inp}
+          />
           {err && <div style={{ color: "#e07070", fontSize: ".78rem", marginBottom: ".8rem", fontFamily: NUNITO }}>{err}</div>}
           <button onClick={submit} disabled={loading}
             style={{ background: CU_ORANGE, color: CU_DARK, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: loading ? "wait" : "pointer", textTransform: "uppercase", width: "100%", fontWeight: 700, opacity: loading ? 0.6 : 1 }}>
@@ -274,11 +324,21 @@ function Login({ go, setEmail: setParentEmail, setDynamicUser, lang, setLang }) 
           <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".4rem" }}>{es ? "Ingresar" : "Sign in"}</div>
           <div style={{ color: C.dim, fontSize: ".8rem", marginBottom: "1.8rem", fontFamily: NUNITO }}>CookUnity</div>
           <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} style={inp} />
-          <input type="password" placeholder={es ? "Contraseña" : "Password"} value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && submit()} style={inp} />
+          <PasswordField
+            placeholder={es ? "Contraseña" : "Password"}
+            value={pass}
+            onChange={v => setPass(v)}
+            onEnter={submit}
+            style={inp}
+          />
           {err && <div style={{ color: "#e07070", fontSize: ".78rem", marginBottom: ".8rem", fontFamily: NUNITO }}>{err}</div>}
           <button onClick={submit} disabled={loading}
             style={{ background: CU_ORANGE, color: CU_DARK, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: loading ? "wait" : "pointer", textTransform: "uppercase", width: "100%", fontWeight: 700, opacity: loading ? 0.6 : 1 }}>
             {loading ? (es ? "Ingresando..." : "Signing in...") : (es ? "Ingresar" : "Sign in")}
+          </button>
+          <button onClick={() => go("recover")}
+            style={{ background: "none", border: "none", color: "rgba(240,235,224,.3)", cursor: "pointer", fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".15em", marginTop: ".8rem", width: "100%", textAlign: "center" }}>
+            {es ? "¿Olvidaste tu contraseña?" : "Forgot your password?"}
           </button>
         </div>
       </div>
@@ -409,7 +469,7 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
     setLoading(true); setErr(""); setLoadingMsg(0);
     const msgInterval = setInterval(() => {
       setLoadingMsg(prev => prev < (es ? PDF_MSGS_ES.length - 1 : PDF_MSGS_EN.length - 1) ? prev + 1 : prev);
-    }, 4000);
+    }, 7000);
     try {
       const base64 = await new Promise((res, rej) => {
         const r = new FileReader();
@@ -495,7 +555,7 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
                 <input type="file" accept=".pdf" style={{ display: "none" }} onChange={e => e.target.files[0] && parsePDF(e.target.files[0])} />
                 {loading ? (
                   <div style={{ lineHeight: 1.7 }}>
-                    <div style={{ fontSize: "1.2rem", marginBottom: ".5rem" }}>⏳</div>
+                    <HourglassAnim />
                     <div>{es ? PDF_MSGS_ES[loadingMsg] : PDF_MSGS_EN[loadingMsg]}</div>
                     <div style={{ fontSize: ".7rem", marginTop: ".5rem", opacity: .5 }}>{es ? "Esto puede tardar hasta 30 segundos" : "This may take up to 30 seconds"}</div>
                   </div>
@@ -662,13 +722,9 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: ".9rem 2rem", borderBottom: `1px solid rgba(245,166,35,.12)`, background: panelBg, position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <div style={{ fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".3em", color: CU_ORANGE, fontWeight: 700 }}>COOK × UNITY</div>
-          {hasDH && (
-            <div style={{ fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".15em", color: dim, display: "flex", gap: ".8rem" }}>
-              <span>{user?.diseno?.tipo}</span>
-              <span style={{ opacity: .4 }}>·</span>
-              <span>{user?.diseno?.autoridad}</span>
-            </div>
-          )}
+          <div style={{ fontFamily: GEORGIA, fontSize: ".85rem", color: dim }}>
+            {es ? `Hola, ${user?.nombre || ""}` : `Hi, ${user?.nombre || ""}`}
+          </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: ".8rem" }}>
           {!hasReview && (
@@ -800,6 +856,74 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
   );
 }
 
+// ── Recover Password screen ──────────────────────────────────────────────────
+function Recover({ go, lang, setLang }) {
+  const es = lang === "es";
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const inp = { width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(245,166,35,.2)", borderRadius: 12, color: "#f0ebe0", fontFamily: NUNITO, fontSize: ".9rem", padding: ".7rem 1rem", outline: "none", boxSizing: "border-box", marginBottom: ".8rem" };
+
+  async function enviar() {
+    if (!email) { setErr(es ? "Ingresá tu email." : "Enter your email."); return; }
+    setLoading(true); setErr("");
+    try {
+      const r = await fetch("/api/update-usuario", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get-cu-usuario", email: email.toLowerCase().trim() })
+      });
+      const data = await r.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        setErr(es ? "Email no encontrado." : "Email not found."); setLoading(false); return;
+      }
+      const user = data[0];
+      await fetch("/api/send-verification", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.toLowerCase().trim(), nombre: user.nombre, lang, type: "recover" })
+      });
+      setSent(true);
+    } catch { setErr(es ? "Error de conexión." : "Connection error."); }
+    setLoading(false);
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: CU_DARK, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+      <div style={{ position: "absolute", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".4rem" }}>
+        {["es", "en"].map(l => (
+          <button key={l} onClick={() => setLang(l)}
+            style={{ background: lang === l ? "rgba(245,166,35,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
+            {l}
+          </button>
+        ))}
+      </div>
+      <div style={{ width: "100%", maxWidth: 420 }}>
+        <button onClick={() => go("login")} style={{ background: "none", border: "none", color: "rgba(255,255,255,.3)", cursor: "pointer", fontFamily: "monospace", fontSize: ".55rem", marginBottom: "2rem", letterSpacing: ".15em" }}>← {es ? "Volver" : "Back"}</button>
+        <div style={{ border: "1px solid rgba(245,166,35,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)", textAlign: sent ? "center" : "left" }}>
+          {sent ? <>
+            <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>📬</div>
+            <div style={{ fontFamily: GEORGIA, fontSize: "1.3rem", color: "#fff", marginBottom: ".8rem" }}>{es ? "Revisá tu email" : "Check your email"}</div>
+            <div style={{ color: "rgba(240,235,224,.45)", fontSize: ".82rem", fontFamily: NUNITO, lineHeight: 1.6 }}>
+              {es ? "Te enviamos un link para restablecer tu contraseña." : "We sent you a link to reset your password."}
+            </div>
+          </> : <>
+            <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".4rem" }}>{es ? "Recuperar contraseña" : "Reset password"}</div>
+            <div style={{ color: "rgba(240,235,224,.45)", fontSize: ".82rem", marginBottom: "1.5rem", fontFamily: NUNITO }}>
+              {es ? "Te enviamos un link a tu email." : "We'll send a link to your email."}
+            </div>
+            <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && enviar()} style={inp} />
+            {err && <div style={{ color: "#e07070", fontSize: ".78rem", marginBottom: ".8rem" }}>{err}</div>}
+            <button onClick={enviar} disabled={loading}
+              style={{ background: CU_ORANGE, color: CU_DARK, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: loading ? "wait" : "pointer", textTransform: "uppercase", width: "100%", fontWeight: 700, opacity: loading ? 0.6 : 1 }}>
+              {loading ? (es ? "Enviando..." : "Sending...") : (es ? "Enviar link" : "Send link")}
+            </button>
+          </>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Pending verification screen ──────────────────────────────────────────────
 function Pending({ go, email, lang, setLang }) {
   const es = lang === "es";
@@ -826,10 +950,66 @@ function Pending({ go, email, lang, setLang }) {
         <div style={{ color: "rgba(240,235,224,.3)", fontSize: ".75rem", fontFamily: NUNITO, marginBottom: "1.5rem" }}>
           {es ? "¿No lo encontrás? Revisá la carpeta de spam." : "Can't find it? Check your spam folder."}
         </div>
-        <button onClick={() => go("onboarding")}
-          style={{ background: "transparent", border: `1px solid rgba(245,166,35,.3)`, borderRadius: 24, color: "rgba(240,235,224,.4)", fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".2em", padding: ".7em 1.5em", cursor: "pointer", textTransform: "uppercase" }}>
-          {es ? "Continuar sin verificar →" : "Continue without verifying →"}
-        </button>
+        <div style={{ color: "rgba(240,235,224,.25)", fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".15em", marginTop: "1rem" }}>
+          {es ? "DEBÉS VERIFICAR TU EMAIL PARA CONTINUAR" : "YOU MUST VERIFY YOUR EMAIL TO CONTINUE"}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Reset Password screen ────────────────────────────────────────────────────
+function Reset({ go, email, lang, setLang }) {
+  const es = lang === "es";
+  const [pass, setPass] = useState("");
+  const [pass2, setPass2] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const [done, setDone] = useState(false);
+  const inp = { width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(245,166,35,.2)", borderRadius: 12, color: "#f0ebe0", fontFamily: NUNITO, fontSize: ".9rem", padding: ".7rem 1rem", outline: "none", boxSizing: "border-box", marginBottom: ".8rem" };
+
+  async function guardar() {
+    if (!pass) { setErr(es ? "Ingresá una contraseña." : "Enter a password."); return; }
+    if (pass !== pass2) { setErr(es ? "Las contraseñas no coinciden." : "Passwords don't match."); return; }
+    if (pass.length < 6) { setErr(es ? "Mínimo 6 caracteres." : "Minimum 6 characters."); return; }
+    setLoading(true); setErr("");
+    try {
+      await fetch("/api/update-usuario", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update-cu-usuario", email, fields: { password_hash: pass } })
+      });
+      setDone(true);
+    } catch { setErr(es ? "Error de conexión." : "Connection error."); }
+    setLoading(false);
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: CU_DARK, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+      <div style={{ width: "100%", maxWidth: 420 }}>
+        <div style={{ border: "1px solid rgba(245,166,35,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)", textAlign: done ? "center" : "left" }}>
+          {done ? <>
+            <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>✅</div>
+            <div style={{ fontFamily: GEORGIA, fontSize: "1.3rem", color: "#fff", marginBottom: ".8rem" }}>
+              {es ? "Contraseña actualizada" : "Password updated"}
+            </div>
+            <button onClick={() => go("login")}
+              style={{ background: CU_ORANGE, color: CU_DARK, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".6rem", letterSpacing: ".25em", padding: ".75em 1.8em", cursor: "pointer", textTransform: "uppercase", fontWeight: 700, marginTop: "1rem" }}>
+              {es ? "Ingresar" : "Sign in"}
+            </button>
+          </> : <>
+            <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".4rem" }}>
+              {es ? "Nueva contraseña" : "New password"}
+            </div>
+            <div style={{ color: "rgba(240,235,224,.45)", fontSize: ".82rem", marginBottom: "1.5rem", fontFamily: NUNITO }}>{email}</div>
+            <PasswordField placeholder={es ? "Nueva contraseña" : "New password"} value={pass} onChange={setPass} style={inp} />
+            <PasswordField placeholder={es ? "Repetir contraseña" : "Confirm password"} value={pass2} onChange={setPass2} onEnter={guardar} style={inp} />
+            {err && <div style={{ color: "#e07070", fontSize: ".78rem", marginBottom: ".8rem" }}>{err}</div>}
+            <button onClick={guardar} disabled={loading}
+              style={{ background: CU_ORANGE, color: CU_DARK, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: loading ? "wait" : "pointer", textTransform: "uppercase", width: "100%", fontWeight: 700, opacity: loading ? 0.6 : 1 }}>
+              {loading ? (es ? "Guardando..." : "Saving...") : (es ? "Guardar contraseña" : "Save password")}
+            </button>
+          </>}
+        </div>
       </div>
     </div>
   );
@@ -838,11 +1018,16 @@ function Pending({ go, email, lang, setLang }) {
 // ── App Root ─────────────────────────────────────────────────────────────────
 export default function App() {
   const params = new URLSearchParams(window.location.search);
-  const verifiedEmail = params.get("email");
+  const verifiedEmail = params.get("email") ? decodeURIComponent(params.get("email")) : "";
   const isVerified = params.get("verified") === "true";
+  const isRecover = params.get("recover") === "true";
 
-  const [screen, setScreen] = useState(isVerified && verifiedEmail ? "onboarding" : "welcome");
-  const [email, setEmail] = useState(isVerified && verifiedEmail ? decodeURIComponent(verifiedEmail) : "");
+  const [screen, setScreen] = useState(
+    isVerified && verifiedEmail ? "onboarding" :
+    isRecover && verifiedEmail ? "reset" :
+    "welcome"
+  );
+  const [email, setEmail] = useState(verifiedEmail || "");
   const [dynamicUser, setDynamicUser] = useState(null);
   const [lang, setLang] = useState("es");
 
@@ -855,6 +1040,8 @@ export default function App() {
       {screen === "register" && <Register go={go} setEmail={setEmail} lang={lang} setLang={setLang} />}
       {screen === "login" && <Login go={go} setEmail={setEmail} setDynamicUser={setDynamicUser} lang={lang} setLang={setLang} />}
       {screen === "pending" && <Pending go={go} email={email} lang={lang} setLang={setLang} />}
+      {screen === "recover" && <Recover go={go} lang={lang} setLang={setLang} />}
+      {screen === "reset" && <Reset go={go} email={email} lang={lang} setLang={setLang} />}
       {screen === "onboarding" && <Onboarding go={go} userEmail={email} setDynamicUser={setDynamicUser} lang={lang} setLang={setLang} />}
       {screen === "upload" && <Upload go={go} userEmail={email} setDynamicUser={setDynamicUser} lang={lang} setLang={setLang} />}
       {screen === "chat" && <Chat go={go} userEmail={email} dynamicUser={dynamicUser} lang={lang} setLang={setLang} />}
