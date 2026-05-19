@@ -78,10 +78,10 @@ IDIOMA ESTRICTO: Si el empleado escribe en español, respondé 100% en español 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function md(t) {
   return t
-    .replace(/^### (.+)$/gm, '<span style="color:#F5A623">$1</span>')
-    .replace(/^## (.+)$/gm, '<span style="color:#F5A623">$1</span>')
-    .replace(/^# (.+)$/gm, '<span style="color:#F5A623">$1</span>')
-    .replace(/\*\*(.*?)\*\*/g, '<span style="color:#F5A623">$1</span>')
+    .replace(/^### (.+)$/gm, '<span style="color:#b89a4e">$1</span>')
+    .replace(/^## (.+)$/gm, '<span style="color:#b89a4e">$1</span>')
+    .replace(/^# (.+)$/gm, '<span style="color:#b89a4e">$1</span>')
+    .replace(/\*\*(.*?)\*\*/g, '<span style="color:#b89a4e">$1</span>')
     .replace(/\n/g, "<br/>");
 }
 
@@ -466,6 +466,7 @@ function Onboarding({ go, userEmail, setDynamicUser, lang, setLang }) {
             style={inp}
           />
           {err && <div style={{ color: "#e07070", fontSize: ".78rem", marginBottom: ".8rem", fontFamily: NUNITO }}>{err}</div>}
+          <div style={{ height: "1rem" }} />
           <button onClick={calcular} disabled={loading}
             style={{ background: CU_ORANGE, color: CU_DARK, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: loading ? "wait" : "pointer", textTransform: "uppercase", width: "100%", fontWeight: 700, opacity: loading ? 0.6 : 1 }}>
             {loading ? (es ? "Calculando..." : "Calculating...") : (es ? "Calcular mi diseño" : "Calculate my design")}
@@ -838,7 +839,8 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
       )}
 
       {/* Messages */}
-      <div className="cu-scroll" ref={chatRef} style={{ flex: 1, overflowY: "auto", padding: "2rem clamp(60px, 10vw, 150px)", display: "flex", flexDirection: "column", gap: "1.8rem" }}>
+      <div className="cu-scroll" ref={chatRef} style={{ flex: 1, overflowY: "auto", padding: "2rem 0", display: "flex", flexDirection: "column" }}>
+        <div style={{ flex: 1, maxWidth: 900, margin: "0 auto", width: "100%", padding: "0 clamp(60px, 10vw, 150px)", display: "flex", flexDirection: "column", gap: "1.8rem" }}>
 
         {msgs.length === 0 && (
           <div style={{ textAlign: "center", padding: "3rem 0" }}>
@@ -873,7 +875,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
           <div key={i} ref={m.role === "user" ? lastUserRef : null}
             style={{ maxWidth: "85%", alignSelf: m.role === "user" ? "flex-end" : "flex-start" }}>
             {m.role === "user" ? (
-              <div style={{ background: "rgba(245,166,35,.12)", border: `1px solid rgba(245,166,35,.2)`, borderRadius: "16px 16px 4px 16px", padding: ".8rem 1.1rem", color: txt, fontFamily: GEORGIA, fontSize: ".95rem", lineHeight: 1.7 }}>
+              <div style={{ fontSize: "1rem", fontStyle: "italic", color: darkMode ? "rgba(240,235,224,.55)" : "rgba(26,26,26,.5)", lineHeight: 1.7, fontFamily: NUNITO, textAlign: "right" }}>
                 {m.content}
               </div>
             ) : (
@@ -890,10 +892,12 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
             ))}
           </div>
         )}
+        </div>
       </div>
 
       {/* Input */}
-      <div style={{ padding: "1rem clamp(60px, 10vw, 150px)", borderTop: `1px solid rgba(245,166,35,.12)`, display: "flex", gap: ".8rem", alignItems: "flex-end", background: panelBg }}>
+      <div style={{ padding: "1rem 0 1.5rem", borderTop: `1px solid rgba(245,166,35,.12)`, background: panelBg }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", width: "100%", padding: "0 clamp(60px, 10vw, 150px)", display: "flex", gap: ".8rem", alignItems: "flex-end" }}>
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -906,6 +910,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
           style={{ border: `1px solid ${CU_ORANGE}`, borderRadius: 20, color: CU_ORANGE, fontFamily: "monospace", fontSize: ".6rem", letterSpacing: ".2em", padding: ".6em 1.2em", cursor: loading || !input.trim() ? "not-allowed" : "pointer", textTransform: "uppercase", background: "none", opacity: loading || !input.trim() ? 0.3 : 1 }}>
           {es ? "Enviar" : "Send"}
         </button>
+        </div>
       </div>
 
       <div style={{ textAlign: "center", padding: ".5rem", fontFamily: "monospace", fontSize: ".42rem", color: dim, letterSpacing: ".12em" }}>
