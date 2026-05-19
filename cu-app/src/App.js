@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 const SUPABASE_URL = "https://ebczaoptweskqzuzrmls.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImViY3phb3B0d2Vza3F6dXpybWxzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMjE5NjgsImV4cCI6MjA1ODU5Nzk2OH0.O3bMDrCYkpijv74GnLPdekJRMCFzqXpAbEkdMSvGrR0";
 
-const CU_ORANGE = "#F5A623";
+const CU_ORANGE = "#b89a4e";
 const CU_DARK = "#1A1A1A";
 const CU_MID = "#2C2C2C";
 const CU_LIGHT = "#F5F0E8";
@@ -173,11 +173,11 @@ function CityInput({ value, onChange, placeholder, style }) {
         onFocus={() => sugerencias.length > 0 && setShow(true)}
       />
       {show && sugerencias.length > 0 && (
-        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#1e1e1e", border: "1px solid rgba(245,166,35,.3)", borderRadius: 8, zIndex: 50, maxHeight: 200, overflowY: "auto", marginTop: 2 }}>
+        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#1e1e1e", border: "1px solid rgba(184,154,78,.3)", borderRadius: 8, zIndex: 50, maxHeight: 200, overflowY: "auto", marginTop: 2 }}>
           {sugerencias.map((s, i) => (
             <div key={i} onClick={() => elegir(s)}
-              style={{ padding: ".7rem 1rem", fontSize: ".82rem", color: "rgba(240,235,224,.6)", cursor: "pointer", borderBottom: "1px solid rgba(245,166,35,.1)" }}
-              onMouseEnter={e => { e.currentTarget.style.color = "#F5A623"; e.currentTarget.style.background = "rgba(245,166,35,.05)"; }}
+              style={{ padding: ".7rem 1rem", fontSize: ".82rem", color: "rgba(240,235,224,.6)", cursor: "pointer", borderBottom: "1px solid rgba(184,154,78,.1)" }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#b89a4e"; e.currentTarget.style.background = "rgba(184,154,78,.05)"; }}
               onMouseLeave={e => { e.currentTarget.style.color = "rgba(240,235,224,.6)"; e.currentTarget.style.background = "transparent"; }}>
               {s}
             </div>
@@ -194,7 +194,7 @@ function Welcome({ go, lang, setLang }) {
   return (
     <div style={{ minHeight: "100vh", background: CU_DARK, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", position: "relative", overflow: "hidden" }}>
       {/* Background texture */}
-      <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 20% 80%, rgba(245,166,35,.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(245,166,35,.05) 0%, transparent 50%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 20% 80%, rgba(184,154,78,.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(184,154,78,.05) 0%, transparent 50%)", pointerEvents: "none" }} />
 
       {/* Lang toggle */}
       <div style={{ position: "absolute", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".5rem" }}>
@@ -279,7 +279,7 @@ function Register({ go, setEmail: setParentEmail, lang, setLang }) {
     setLoading(false);
   }
 
-  const inp = { width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(245,166,35,.2)", borderRadius: 12, color: C.txt, fontFamily: NUNITO, fontSize: ".9rem", padding: ".7rem 1rem", outline: "none", boxSizing: "border-box", marginBottom: ".8rem" };
+  const inp = { width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(184,154,78,.2)", borderRadius: 12, color: C.txt, fontFamily: NUNITO, fontSize: ".9rem", padding: ".7rem 1rem", outline: "none", boxSizing: "border-box", marginBottom: ".8rem" };
 
   return (
     <div style={{ minHeight: "100vh", background: CU_DARK, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
@@ -289,13 +289,13 @@ function Register({ go, setEmail: setParentEmail, lang, setLang }) {
           <div style={{ display: "flex", gap: ".4rem" }}>
             {["es", "en"].map(l => (
               <button key={l} onClick={() => setLang(l)}
-                style={{ background: lang === l ? "rgba(245,166,35,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
+                style={{ background: lang === l ? "rgba(184,154,78,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
                 {l}
               </button>
             ))}
           </div>
         </div>
-        <div style={{ border: "1px solid rgba(245,166,35,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)" }}>
+        <div style={{ border: "1px solid rgba(184,154,78,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)" }}>
           <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".4rem" }}>{es ? "Crear cuenta" : "Create account"}</div>
           <div style={{ color: C.dim, fontSize: ".8rem", marginBottom: "1.8rem", fontFamily: NUNITO }}>{es ? "Empleados de CookUnity" : "CookUnity employees"}</div>
           <div style={{ display: "flex", gap: ".8rem" }}>
@@ -337,7 +337,7 @@ function Login({ go, setEmail: setParentEmail, setDynamicUser, lang, setLang }) 
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const C = { bg: CU_DARK, txt: "#f0ebe0", dim: "rgba(240,235,224,.45)", gold: CU_ORANGE };
-  const inp = { width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(245,166,35,.2)", borderRadius: 12, color: C.txt, fontFamily: NUNITO, fontSize: ".9rem", padding: ".7rem 1rem", outline: "none", boxSizing: "border-box", marginBottom: ".8rem" };
+  const inp = { width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(184,154,78,.2)", borderRadius: 12, color: C.txt, fontFamily: NUNITO, fontSize: ".9rem", padding: ".7rem 1rem", outline: "none", boxSizing: "border-box", marginBottom: ".8rem" };
 
   async function submit() {
     if (!email || !pass) { setErr(es ? "Completá todos los campos." : "Please fill all fields."); return; }
@@ -368,13 +368,13 @@ function Login({ go, setEmail: setParentEmail, setDynamicUser, lang, setLang }) 
           <div style={{ display: "flex", gap: ".4rem" }}>
             {["es", "en"].map(l => (
               <button key={l} onClick={() => setLang(l)}
-                style={{ background: lang === l ? "rgba(245,166,35,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
+                style={{ background: lang === l ? "rgba(184,154,78,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
                 {l}
               </button>
             ))}
           </div>
         </div>
-        <div style={{ border: "1px solid rgba(245,166,35,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)" }}>
+        <div style={{ border: "1px solid rgba(184,154,78,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)" }}>
           <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".4rem" }}>{es ? "Ingresar" : "Sign in"}</div>
           <div style={{ color: C.dim, fontSize: ".8rem", marginBottom: "1.8rem", fontFamily: NUNITO }}>CookUnity</div>
           <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} style={inp} />
@@ -407,7 +407,7 @@ function Onboarding({ go, userEmail, setDynamicUser, lang, setLang }) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const C = { bg: CU_DARK, txt: "#f0ebe0", dim: "rgba(240,235,224,.45)" };
-  const inp = { width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(245,166,35,.2)", borderRadius: 12, color: C.txt, fontFamily: NUNITO, fontSize: ".9rem", padding: ".7rem 1rem", outline: "none", boxSizing: "border-box", marginBottom: ".8rem" };
+  const inp = { width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(184,154,78,.2)", borderRadius: 12, color: C.txt, fontFamily: NUNITO, fontSize: ".9rem", padding: ".7rem 1rem", outline: "none", boxSizing: "border-box", marginBottom: ".8rem" };
 
   async function calcular() {
     if (!f.fecha || !f.hora || !f.lugar) { setErr(es ? "Completá todos los campos." : "Please fill all fields."); return; }
@@ -439,13 +439,13 @@ function Onboarding({ go, userEmail, setDynamicUser, lang, setLang }) {
       <div style={{ position: "absolute", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".4rem" }}>
         {["es", "en"].map(l => (
           <button key={l} onClick={() => setLang(l)}
-            style={{ background: lang === l ? "rgba(245,166,35,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
+            style={{ background: lang === l ? "rgba(184,154,78,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
             {l}
           </button>
         ))}
       </div>
       <div style={{ width: "100%", maxWidth: 480 }}>
-        <div style={{ border: "1px solid rgba(245,166,35,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)" }}>
+        <div style={{ border: "1px solid rgba(184,154,78,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)" }}>
           <div style={{ fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".3em", color: CU_ORANGE, marginBottom: ".5rem", textTransform: "uppercase" }}>
             {es ? "Paso 1 de 2" : "Step 1 of 2"}
           </div>
@@ -578,13 +578,13 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
       <div style={{ position: "absolute", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".4rem" }}>
         {["es", "en"].map(l => (
           <button key={l} onClick={() => setLang(l)}
-            style={{ background: lang === l ? "rgba(245,166,35,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
+            style={{ background: lang === l ? "rgba(184,154,78,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
             {l}
           </button>
         ))}
       </div>
       <div style={{ width: "100%", maxWidth: 560 }}>
-        <div style={{ border: "1px solid rgba(245,166,35,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)" }}>
+        <div style={{ border: "1px solid rgba(184,154,78,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)" }}>
           <div style={{ fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".3em", color: CU_ORANGE, marginBottom: ".5rem", textTransform: "uppercase" }}>
             {es ? "Paso 2 de 2" : "Step 2 of 2"}
           </div>
@@ -601,7 +601,7 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
           <div style={{ display: "flex", gap: ".5rem", marginBottom: "1.2rem" }}>
             {["pdf", "text"].map(m => (
               <button key={m} onClick={() => setModo(m)}
-                style={{ background: modo === m ? "rgba(245,166,35,.15)" : "transparent", border: `1px solid ${modo === m ? CU_ORANGE : "rgba(245,166,35,.2)"}`, borderRadius: 20, color: modo === m ? CU_ORANGE : C.dim, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".15em", padding: ".4em 1em", cursor: "pointer", textTransform: "uppercase" }}>
+                style={{ background: modo === m ? "rgba(184,154,78,.15)" : "transparent", border: `1px solid ${modo === m ? CU_ORANGE : "rgba(184,154,78,.2)"}`, borderRadius: 20, color: modo === m ? CU_ORANGE : C.dim, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".15em", padding: ".4em 1em", cursor: "pointer", textTransform: "uppercase" }}>
                 {m === "pdf" ? "PDF" : (es ? "Texto" : "Text")}
               </button>
             ))}
@@ -609,9 +609,9 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
 
           {modo === "pdf" ? (
             <div>
-              <label style={{ display: "block", border: "2px dashed rgba(245,166,35,.3)", borderRadius: 12, padding: "2rem", textAlign: "center", cursor: "pointer", color: C.dim, fontFamily: NUNITO, fontSize: ".85rem", lineHeight: 1.6, transition: "border-color .2s" }}
+              <label style={{ display: "block", border: "2px dashed rgba(184,154,78,.3)", borderRadius: 12, padding: "2rem", textAlign: "center", cursor: "pointer", color: C.dim, fontFamily: NUNITO, fontSize: ".85rem", lineHeight: 1.6, transition: "border-color .2s" }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = CU_ORANGE}
-                onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(245,166,35,.3)"}>
+                onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(184,154,78,.3)"}>
                 <input type="file" accept=".pdf" style={{ display: "none" }} onChange={e => e.target.files[0] && parsePDF(e.target.files[0])} />
                 {loading ? (
                   <div style={{ lineHeight: 1.7 }}>
@@ -628,7 +628,7 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
                 )}
               </label>
               {texto && (
-                <div style={{ marginTop: "1rem", padding: "1rem", background: "rgba(245,166,35,.05)", border: "1px solid rgba(245,166,35,.15)", borderRadius: 10, fontSize: ".78rem", color: C.dim, fontFamily: NUNITO, lineHeight: 1.6, maxHeight: 200, overflowY: "auto" }}>
+                <div style={{ marginTop: "1rem", padding: "1rem", background: "rgba(184,154,78,.05)", border: "1px solid rgba(184,154,78,.15)", borderRadius: 10, fontSize: ".78rem", color: C.dim, fontFamily: NUNITO, lineHeight: 1.6, maxHeight: 200, overflowY: "auto" }}>
                   <div style={{ color: CU_ORANGE, fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".2em", marginBottom: ".5rem" }}>
                     {es ? "TEXTO EXTRAÍDO" : "EXTRACTED TEXT"}
                   </div>
@@ -641,7 +641,7 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
               value={texto}
               onChange={e => setTexto(e.target.value)}
               placeholder={es ? "Pegá el texto de tu performance review aquí..." : "Paste your performance review text here..."}
-              style={{ width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(245,166,35,.2)", borderRadius: 12, color: C.txt, fontFamily: NUNITO, fontSize: ".85rem", padding: "1rem", outline: "none", resize: "vertical", lineHeight: 1.6, minHeight: 200, boxSizing: "border-box" }}
+              style={{ width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(184,154,78,.2)", borderRadius: 12, color: C.txt, fontFamily: NUNITO, fontSize: ".85rem", padding: "1rem", outline: "none", resize: "vertical", lineHeight: 1.6, minHeight: 200, boxSizing: "border-box" }}
             />
           )}
 
@@ -767,19 +767,19 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
   const hasDH = !!user?.diseno;
 
   return (
-    <div style={{ minHeight: "100vh", background: bg, display: "flex", flexDirection: "column", transition: "background .3s" }}>
+    <div style={{ height: "100vh", background: bg, display: "flex", flexDirection: "column", transition: "background .3s", overflow: "hidden" }}>
       <style>{`
         textarea, input { color: ${txt} !important; -webkit-text-fill-color: ${txt} !important; caret-color: ${CU_ORANGE}; }
         textarea::placeholder, input::placeholder { color: ${dim} !important; -webkit-text-fill-color: ${dim} !important; }
         .cu-scroll::-webkit-scrollbar { width: 4px; }
         .cu-scroll::-webkit-scrollbar-track { background: transparent; }
-        .cu-scroll::-webkit-scrollbar-thumb { background: rgba(245,166,35,.25); border-radius: 2px; }
-        .cu-scroll { scrollbar-width: thin; scrollbar-color: rgba(245,166,35,.25) transparent; }
+        .cu-scroll::-webkit-scrollbar-thumb { background: rgba(184,154,78,.25); border-radius: 2px; }
+        .cu-scroll { scrollbar-width: thin; scrollbar-color: rgba(184,154,78,.25) transparent; }
         @keyframes p { 0%,80%,100% { opacity:.2; transform:scale(.8) } 40% { opacity:1; transform:scale(1) } }
       `}</style>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: ".9rem 2rem", borderBottom: `1px solid rgba(245,166,35,.12)`, background: panelBg, position: "sticky", top: 0, zIndex: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: ".9rem 2rem", borderBottom: `1px solid rgba(184,154,78,.12)`, background: panelBg, position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <div style={{ fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".3em", color: CU_ORANGE, fontWeight: 700 }}>COOK × UNITY</div>
           <div style={{ fontFamily: GEORGIA, fontSize: ".85rem", color: dim }}>
@@ -789,14 +789,14 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
         <div style={{ display: "flex", alignItems: "center", gap: ".8rem" }}>
           {!hasReview && (
             <button onClick={() => setShowUpload(true)}
-              style={{ background: "rgba(245,166,35,.15)", border: `1px solid ${CU_ORANGE}`, borderRadius: 20, color: CU_ORANGE, fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".15em", padding: ".35em .8em", cursor: "pointer", textTransform: "uppercase" }}>
+              style={{ background: "rgba(184,154,78,.15)", border: `1px solid ${CU_ORANGE}`, borderRadius: 20, color: CU_ORANGE, fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".15em", padding: ".35em .8em", cursor: "pointer", textTransform: "uppercase" }}>
               {es ? "+ Subir review" : "+ Upload review"}
             </button>
           )}
           {/* Lang */}
           {["es", "en"].map(l => (
             <button key={l} onClick={() => setLang(l)}
-              style={{ background: lang === l ? "rgba(245,166,35,.15)" : "transparent", color: lang === l ? CU_ORANGE : dim, border: `1px solid ${lang === l ? CU_ORANGE : "rgba(245,166,35,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
+              style={{ background: lang === l ? "rgba(184,154,78,.15)" : "transparent", color: lang === l ? CU_ORANGE : dim, border: `1px solid ${lang === l ? CU_ORANGE : "rgba(184,154,78,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
               {l}
             </button>
           ))}
@@ -816,7 +816,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
 
       {/* Context warning if no review */}
       {!hasReview && (
-        <div style={{ background: "rgba(245,166,35,.08)", borderBottom: `1px solid rgba(245,166,35,.15)`, padding: ".7rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ background: "rgba(184,154,78,.08)", borderBottom: `1px solid rgba(184,154,78,.15)`, padding: ".7rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ color: CU_ORANGE, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".15em" }}>
             {es ? "⚠ Sin performance review — las respuestas serán menos personalizadas" : "⚠ No performance review — answers will be less personalized"}
           </div>
@@ -829,7 +829,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
       {/* Upload modal */}
       {showUpload && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "1rem" }}>
-          <div style={{ background: CU_DARK, border: `1px solid rgba(245,166,35,.25)`, borderRadius: 16, width: "100%", maxWidth: 520, maxHeight: "80vh", overflowY: "auto" }}>
+          <div style={{ background: CU_DARK, border: `1px solid rgba(184,154,78,.25)`, borderRadius: 16, width: "100%", maxWidth: 520, maxHeight: "80vh", overflowY: "auto" }}>
             <div style={{ display: "flex", justifyContent: "flex-end", padding: "1rem 1.5rem 0" }}>
               <button onClick={() => setShowUpload(false)} style={{ background: "none", border: "none", color: dim, cursor: "pointer", fontSize: "1.2rem" }}>×</button>
             </div>
@@ -860,9 +860,9 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
                   es ? "¿Cómo se alinea mi diseño con los Leadership Principles?" : "How does my design align with the Leadership Principles?",
                 ].map((q, i) => (
                   <button key={i} onClick={() => { setInput(q); }}
-                    style={{ background: "rgba(245,166,35,.08)", border: `1px solid rgba(245,166,35,.2)`, borderRadius: 20, color: dim, fontFamily: NUNITO, fontSize: ".78rem", padding: ".5em 1em", cursor: "pointer", transition: "all .2s" }}
+                    style={{ background: "rgba(184,154,78,.08)", border: `1px solid rgba(184,154,78,.2)`, borderRadius: 20, color: dim, fontFamily: NUNITO, fontSize: ".78rem", padding: ".5em 1em", cursor: "pointer", transition: "all .2s" }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = CU_ORANGE; e.currentTarget.style.color = CU_ORANGE; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(245,166,35,.2)"; e.currentTarget.style.color = dim; }}>
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(184,154,78,.2)"; e.currentTarget.style.color = dim; }}>
                     {q}
                   </button>
                 ))}
@@ -896,7 +896,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
       </div>
 
       {/* Input */}
-      <div style={{ padding: "1rem 0 1.5rem", borderTop: `1px solid rgba(245,166,35,.12)`, background: panelBg }}>
+      <div style={{ padding: "1rem 0 1.5rem", borderTop: `1px solid rgba(184,154,78,.12)`, background: panelBg }}>
         <div style={{ maxWidth: 900, margin: "0 auto", width: "100%", padding: "0 clamp(60px, 10vw, 150px)", display: "flex", gap: ".8rem", alignItems: "flex-end" }}>
         <textarea
           value={input}
@@ -904,7 +904,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
           placeholder={es ? `Preguntá sobre tu desempeño, ${user?.nombre || ""}...` : `Ask about your performance, ${user?.nombre || ""}...`}
           rows={1}
-          style={{ flex: 1, background: "transparent", border: "none", borderBottom: `1px solid rgba(245,166,35,.25)`, color: txt, fontFamily: GEORGIA, fontSize: ".95rem", padding: ".6rem 0", outline: "none", resize: "none", lineHeight: 1.5 }}
+          style={{ flex: 1, background: "transparent", border: "none", borderBottom: `1px solid rgba(184,154,78,.25)`, color: txt, fontFamily: GEORGIA, fontSize: ".95rem", padding: ".6rem 0", outline: "none", resize: "none", lineHeight: 1.5 }}
         />
         <button onClick={send} disabled={loading || !input.trim()}
           style={{ border: `1px solid ${CU_ORANGE}`, borderRadius: 20, color: CU_ORANGE, fontFamily: "monospace", fontSize: ".6rem", letterSpacing: ".2em", padding: ".6em 1.2em", cursor: loading || !input.trim() ? "not-allowed" : "pointer", textTransform: "uppercase", background: "none", opacity: loading || !input.trim() ? 0.3 : 1 }}>
@@ -927,7 +927,7 @@ function Recover({ go, lang, setLang }) {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const inp = { width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(245,166,35,.2)", borderRadius: 12, color: "#f0ebe0", fontFamily: NUNITO, fontSize: ".9rem", padding: ".7rem 1rem", outline: "none", boxSizing: "border-box", marginBottom: ".8rem" };
+  const inp = { width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(184,154,78,.2)", borderRadius: 12, color: "#f0ebe0", fontFamily: NUNITO, fontSize: ".9rem", padding: ".7rem 1rem", outline: "none", boxSizing: "border-box", marginBottom: ".8rem" };
 
   async function enviar() {
     if (!email) { setErr(es ? "Ingresá tu email." : "Enter your email."); return; }
@@ -956,14 +956,14 @@ function Recover({ go, lang, setLang }) {
       <div style={{ position: "absolute", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".4rem" }}>
         {["es", "en"].map(l => (
           <button key={l} onClick={() => setLang(l)}
-            style={{ background: lang === l ? "rgba(245,166,35,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
+            style={{ background: lang === l ? "rgba(184,154,78,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
             {l}
           </button>
         ))}
       </div>
       <div style={{ width: "100%", maxWidth: 420 }}>
         <button onClick={() => go("login")} style={{ background: "none", border: "none", color: "rgba(255,255,255,.3)", cursor: "pointer", fontFamily: "monospace", fontSize: ".55rem", marginBottom: "2rem", letterSpacing: ".15em" }}>← {es ? "Volver" : "Back"}</button>
-        <div style={{ border: "1px solid rgba(245,166,35,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)", textAlign: sent ? "center" : "left" }}>
+        <div style={{ border: "1px solid rgba(184,154,78,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)", textAlign: sent ? "center" : "left" }}>
           {sent ? <>
             <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>📬</div>
             <div style={{ fontFamily: GEORGIA, fontSize: "1.3rem", color: "#fff", marginBottom: ".8rem" }}>{es ? "Revisá tu email" : "Check your email"}</div>
@@ -996,7 +996,7 @@ function Pending({ go, email, lang, setLang }) {
       <div style={{ position: "absolute", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".4rem" }}>
         {["es", "en"].map(l => (
           <button key={l} onClick={() => setLang(l)}
-            style={{ background: lang === l ? "rgba(245,166,35,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
+            style={{ background: lang === l ? "rgba(184,154,78,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
             {l}
           </button>
         ))}
@@ -1030,7 +1030,7 @@ function Reset({ go, email, lang, setLang }) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState(false);
-  const inp = { width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(245,166,35,.2)", borderRadius: 12, color: "#f0ebe0", fontFamily: NUNITO, fontSize: ".9rem", padding: ".7rem 1rem", outline: "none", boxSizing: "border-box", marginBottom: ".8rem" };
+  const inp = { width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(184,154,78,.2)", borderRadius: 12, color: "#f0ebe0", fontFamily: NUNITO, fontSize: ".9rem", padding: ".7rem 1rem", outline: "none", boxSizing: "border-box", marginBottom: ".8rem" };
 
   async function guardar() {
     if (!pass) { setErr(es ? "Ingresá una contraseña." : "Enter a password."); return; }
@@ -1050,7 +1050,7 @@ function Reset({ go, email, lang, setLang }) {
   return (
     <div style={{ minHeight: "100vh", background: CU_DARK, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
       <div style={{ width: "100%", maxWidth: 420 }}>
-        <div style={{ border: "1px solid rgba(245,166,35,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)", textAlign: done ? "center" : "left" }}>
+        <div style={{ border: "1px solid rgba(184,154,78,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)", textAlign: done ? "center" : "left" }}>
           {done ? <>
             <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>✅</div>
             <div style={{ fontFamily: GEORGIA, fontSize: "1.3rem", color: "#fff", marginBottom: ".8rem" }}>
