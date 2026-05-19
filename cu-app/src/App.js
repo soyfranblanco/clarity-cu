@@ -134,6 +134,60 @@ function HourglassAnim() {
   return <div style={{ fontSize: "1.5rem", marginBottom: ".5rem" }}>{frames[frame]}</div>;
 }
 
+// ── CityInput component ──────────────────────────────────────────────────────
+function CityInput({ value, onChange, placeholder, style }) {
+  const [sugerencias, setSugerencias] = React.useState([]);
+  const [show, setShow] = React.useState(false);
+  const timer = React.useRef(null);
+
+  async function buscar(q) {
+    if (q.length < 3) { setSugerencias([]); return; }
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&featuretype=city&accept-language=es`);
+      const data = await r.json();
+      setSugerencias(data.map(d => d.display_name));
+    } catch { setSugerencias([]); }
+  }
+
+  function handleChange(e) {
+    onChange(e.target.value);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => buscar(e.target.value), 400);
+    setShow(true);
+  }
+
+  function elegir(ciudad) {
+    onChange(ciudad);
+    setSugerencias([]);
+    setShow(false);
+  }
+
+  return (
+    <div style={{ position: "relative" }}>
+      <input
+        style={{ ...style, marginBottom: 0 }}
+        placeholder={placeholder}
+        value={value}
+        onChange={handleChange}
+        onBlur={() => setTimeout(() => setShow(false), 200)}
+        onFocus={() => sugerencias.length > 0 && setShow(true)}
+      />
+      {show && sugerencias.length > 0 && (
+        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#1e1e1e", border: "1px solid rgba(245,166,35,.3)", borderRadius: 8, zIndex: 50, maxHeight: 200, overflowY: "auto", marginTop: 2 }}>
+          {sugerencias.map((s, i) => (
+            <div key={i} onClick={() => elegir(s)}
+              style={{ padding: ".7rem 1rem", fontSize: ".82rem", color: "rgba(240,235,224,.6)", cursor: "pointer", borderBottom: "1px solid rgba(245,166,35,.1)" }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#F5A623"; e.currentTarget.style.background = "rgba(245,166,35,.05)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "rgba(240,235,224,.6)"; e.currentTarget.style.background = "transparent"; }}>
+              {s}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Welcome ───────────────────────────────────────────────────────────────────
 function Welcome({ go, lang, setLang }) {
   const es = lang === "es";
@@ -405,7 +459,12 @@ function Onboarding({ go, userEmail, setDynamicUser, lang, setLang }) {
           </div>
           <input type="date" value={f.fecha} onChange={e => setF({ ...f, fecha: e.target.value })} style={inp} />
           <input type="time" value={f.hora} onChange={e => setF({ ...f, hora: e.target.value })} style={inp} />
-          <input placeholder={es ? "Ciudad de nacimiento" : "City of birth"} value={f.lugar} onChange={e => setF({ ...f, lugar: e.target.value })} style={inp} />
+          <CityInput
+            value={f.lugar}
+            onChange={v => setF({ ...f, lugar: v })}
+            placeholder={es ? "Ciudad de nacimiento" : "City of birth"}
+            style={inp}
+          />
           {err && <div style={{ color: "#e07070", fontSize: ".78rem", marginBottom: ".8rem", fontFamily: NUNITO }}>{err}</div>}
           <button onClick={calcular} disabled={loading}
             style={{ background: CU_ORANGE, color: CU_DARK, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: loading ? "wait" : "pointer", textTransform: "uppercase", width: "100%", fontWeight: 700, opacity: loading ? 0.6 : 1 }}>
