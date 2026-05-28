@@ -73,7 +73,10 @@ TONO:
 - Respondé en el mismo idioma que escribe el empleado (español o inglés)
 - Frases cortas. Siempre cerrá con algo accionable.
 
-IDIOMA ESTRICTO: Si el empleado escribe en español, respondé 100% en español sin mezclar palabras en inglés. Si escribe en inglés, respondé en inglés. Nunca mezcles idiomas dentro de una misma respuesta.`;
+IDIOMA ESTRICTO: Si el empleado escribe en español, respondé 100% en español sin mezclar palabras en inglés. Si escribe en inglés, respondé en inglés. Nunca mezcles idiomas dentro de una misma respuesta.
+
+INTERFAZ DE LA HERRAMIENTA:
+Esta herramienta tiene una sección llamada "Mis documentos" (o "My documents" en inglés) accesible desde un botón en la barra superior del chat. Desde ahí el usuario puede subir documentos en PDF o texto, y activar o desactivar cuáles se inyectan en la conversación. Si alguien pregunta cómo subir un archivo, un documento, su performance review o cualquier otro material, siempre indicá que debe usar el botón "Mis documentos" en la barra superior. Nunca menciones clips, íconos de adjuntar, ni ninguna otra forma de subir archivos.`;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function md(t) {
