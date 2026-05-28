@@ -123,7 +123,53 @@ export default async function handler(req, res) {
       if (!r.ok) return res.status(r.status).json({ error: data });
       return res.status(200).json(data);
     }
+// ── CookUnity: obtener documentos ──────────────────────────────────────────
+if (action === "get-cu-documentos") {
+  if (!email) return res.status(400).json({ error: "Falta email" });
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/cu_documentos?usuario_email=eq.${encodeURIComponent(email)}&order=created_at.desc`, {
+    headers
+  });
+  const data = await r.json();
+  if (!r.ok) return res.status(r.status).json({ error: data });
+  return res.status(200).json(data);
+}
 
+// ── CookUnity: insertar documento ──────────────────────────────────────────
+if (action === "insert-cu-documento") {
+  if (!fields) return res.status(400).json({ error: "Faltan fields" });
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/cu_documentos`, {
+    method: "POST", headers,
+    body: JSON.stringify(fields)
+  });
+  const data = await r.json();
+  if (!r.ok) return res.status(r.status).json({ error: data });
+  return res.status(200).json(data);
+}
+
+// ── CookUnity: actualizar documento (toggle activo, etc) ───────────────────
+if (action === "update-cu-documento") {
+  if (!id || !fields) return res.status(400).json({ error: "Faltan id o fields" });
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/cu_documentos?id=eq.${id}`, {
+    method: "PATCH", headers,
+    body: JSON.stringify(fields)
+  });
+  const data = await r.json();
+  if (!r.ok) return res.status(r.status).json({ error: data });
+  return res.status(200).json(data);
+}
+
+// ── CookUnity: eliminar documento ──────────────────────────────────────────
+if (action === "delete-cu-documento") {
+  if (!id) return res.status(400).json({ error: "Falta id" });
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/cu_documentos?id=eq.${id}`, {
+    method: "DELETE", headers
+  });
+  if (!r.ok) {
+    const data = await r.json();
+    return res.status(r.status).json({ error: data });
+  }
+  return res.status(200).json({ deleted: true });
+}
     return res.status(400).json({ error: "Acción no reconocida" });
 
   } catch (error) {
