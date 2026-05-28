@@ -322,6 +322,24 @@ function Login({ go, setEmail: setParentEmail, setDynamicUser, lang, setLang }) 
 
   async function submit() {
     if (!email || !pass) { setErr(es ? "Completá todos los campos." : "Please fill all fields."); return; }
+
+    // ── Rate limiting ────────────────────────────────────────────────────────
+    const RL_KEY = `cu_rl_${email.toLowerCase().trim()}`;
+    const now = Date.now();
+    const windowMs = 15 * 60 * 1000;
+    const maxAttempts = 5;
+    let rl = { count: 0, first: now };
+    try { const raw = localStorage.getItem(RL_KEY); if (raw) rl = JSON.parse(raw); } catch {}
+    if (now - rl.first > windowMs) { rl = { count: 0, first: now }; }
+    if (rl.count >= maxAttempts) {
+      const waitMin = Math.ceil((windowMs - (now - rl.first)) / 60000);
+      setErr(es
+        ? `Demasiados intentos. Esperá ${waitMin} minuto${waitMin > 1 ? "s" : ""} e intentá de nuevo.`
+        : `Too many attempts. Wait ${waitMin} minute${waitMin > 1 ? "s" : ""} and try again.`);
+      return;
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
     setLoading(true); setErr("");
     try {
       const loginRes = await fetch("/api/update-usuario", {
@@ -329,9 +347,17 @@ function Login({ go, setEmail: setParentEmail, setDynamicUser, lang, setLang }) 
         body: JSON.stringify({ action: "get-cu-usuario", email: email.toLowerCase().trim() })
       });
       const loginData = await loginRes.json();
-      if (!Array.isArray(loginData) || loginData.length === 0) { setErr(es ? "Email no encontrado." : "Email not found."); setLoading(false); return; }
+      if (!Array.isArray(loginData) || loginData.length === 0) {
+        try { localStorage.setItem(RL_KEY, JSON.stringify({ count: rl.count + 1, first: rl.first })); } catch {}
+        setErr(es ? "Email no encontrado." : "Email not found."); setLoading(false); return;
+      }
       const user = loginData[0];
-      if (user.password_hash !== pass) { setErr(es ? "Contraseña incorrecta." : "Incorrect password."); setLoading(false); return; }
+      if (user.password_hash !== pass) {
+        try { localStorage.setItem(RL_KEY, JSON.stringify({ count: rl.count + 1, first: rl.first })); } catch {}
+        setErr(es ? "Contraseña incorrecta." : "Incorrect password."); setLoading(false); return;
+      }
+      // Login exitoso — limpiar contador
+      try { localStorage.removeItem(RL_KEY); } catch {}
       setParentEmail(user.email);
       setDynamicUser(user);
       if (!user.diseno) go("onboarding");
@@ -573,7 +599,6 @@ function Documentos({ go, userEmail, isModal = false, lang, setLang }) {
 
   const content = (
     <div style={{ padding: isModal ? "1.5rem 2rem 2rem" : "0" }}>
-      {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <div>
           <div style={{ fontFamily: GEORGIA, fontSize: "1.3rem", color: "#f0ebe0" }}>
@@ -589,7 +614,6 @@ function Documentos({ go, userEmail, isModal = false, lang, setLang }) {
         </button>
       </div>
 
-      {/* Form */}
       {showForm && (
         <div style={{ border: "1px solid rgba(184,154,78,.2)", borderRadius: 12, padding: "1.5rem", marginBottom: "1.5rem", background: "rgba(255,255,255,.02)" }}>
           <input
@@ -650,7 +674,6 @@ function Documentos({ go, userEmail, isModal = false, lang, setLang }) {
         </div>
       )}
 
-      {/* Lista de docs */}
       {loading ? (
         <div style={{ color: "rgba(240,235,224,.3)", fontFamily: NUNITO, fontSize: ".82rem", textAlign: "center", padding: "2rem" }}>
           {es ? "Cargando documentos..." : "Loading documents..."}
@@ -683,22 +706,6 @@ function Documentos({ go, userEmail, isModal = false, lang, setLang }) {
               </button>
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Botón saltar (solo en onboarding, no en modal) */}
-      {!isModal && (
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1.5rem" }}>
-          <button onClick={() => go("chat")}
-            style={{ background: "none", border: "none", color: "rgba(240,235,224,.3)", cursor: "pointer", fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".15em" }}>
-            {es ? "Saltar por ahora →" : "Skip for now →"}
-          </button>
-          {docs.length > 0 && (
-            <button onClick={() => go("chat")}
-              style={{ background: CU_ORANGE, color: CU_DARK, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".6rem", letterSpacing: ".25em", padding: ".75em 1.8em", cursor: "pointer", textTransform: "uppercase", fontWeight: 700 }}>
-              {es ? "Continuar al chat →" : "Continue to chat →"}
-            </button>
-          )}
         </div>
       )}
     </div>
