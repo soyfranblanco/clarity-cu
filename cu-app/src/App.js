@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
 // ── Constants ────────────────────────────────────────────────────────────────
-const SUPABASE_URL = "https://ebczaoptweskqzuzrmls.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImViY3phb3B0d2Vza3F6dXpybWxzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMjE5NjgsImV4cCI6MjA1ODU5Nzk2OH0.O3bMDrCYkpijv74GnLPdekJRMCFzqXpAbEkdMSvGrR0";
 
 const CU_ORANGE = "#b89a4e";
 const CU_DARK = "#1A1A1A";
@@ -78,29 +76,7 @@ IDIOMA ESTRICTO: Si el empleado escribe en español, respondé 100% en español 
 INTERFAZ DE LA HERRAMIENTA:
 Esta herramienta tiene una sección llamada "Mis documentos" (o "My documents" en inglés) accesible desde un botón en la barra superior del chat. Desde ahí el usuario puede subir documentos en PDF o texto, y activar o desactivar cuáles se inyectan en la conversación. Si alguien pregunta cómo subir un archivo, un documento, su performance review o cualquier otro material, siempre indicá que debe usar el botón "Mis documentos" en la barra superior. Nunca menciones clips, íconos de adjuntar, ni ninguna otra forma de subir archivos.`;
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-function md(t) {
-  return t
-    .replace(/^### (.+)$/gm, '<span style="color:#b89a4e">$1</span>')
-    .replace(/^## (.+)$/gm, '<span style="color:#b89a4e">$1</span>')
-    .replace(/^# (.+)$/gm, '<span style="color:#b89a4e">$1</span>')
-    .replace(/\*\*(.*?)\*\*/g, '<span style="color:#b89a4e">$1</span>')
-    .replace(/\n/g, "<br/>");
-}
 
-async function dbFetch(endpoint, opts = {}) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`, {
-    headers: {
-      "apikey": SUPABASE_KEY,
-      "Authorization": `Bearer ${SUPABASE_KEY}`,
-      "Content-Type": "application/json",
-      "Prefer": opts.method === "POST" ? "return=representation" : undefined,
-      ...opts.headers,
-    },
-    ...opts,
-  });
-  return r.json();
-}
 
 // ── PasswordField component ──────────────────────────────────────────────────
 function PasswordField({ placeholder, value, onChange, onEnter, style }) {
