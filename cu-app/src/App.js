@@ -723,10 +723,16 @@ function Documentos({ go, userEmail, isModal = false, lang, setLang }) {
           </div>
           <div style={{ color: "rgba(240,235,224,.45)", fontSize: ".82rem", marginBottom: "1.8rem", fontFamily: NUNITO, lineHeight: 1.6 }}>
             {es
-              ? "Subí tu performance review, CliftonStrengths u otros documentos relevantes. La IA los usará en el chat."
-              : "Upload your performance review, CliftonStrengths, or other relevant documents. The AI will use them in the chat."}
+              ? "Subí tu performance review o cualquier otro documento que quieras analizar con la herramienta."
+              : "Upload your performance review or any other document you want to analyze with the tool."}
           </div>
           <Documentos go={go} userEmail={userEmail} isModal={true} lang={lang} setLang={setLang} />
+          <div style={{ display: "flex", justifyContent: "flex-start", marginTop: "1.2rem" }}>
+            <button onClick={() => go("chat")}
+              style={{ background: "none", border: "none", color: "rgba(240,235,224,.3)", cursor: "pointer", fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".15em" }}>
+              {es ? "Saltar por ahora →" : "Skip for now →"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
