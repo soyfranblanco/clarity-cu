@@ -53,18 +53,18 @@ const SYSTEM_PROMPT_CU = `Sos un asesor de desarrollo profesional que combina Di
 
 Tenés acceso a tres fuentes de información sobre esta persona:
 1. Su perfil de Diseño Humano — cómo procesa decisiones, gestiona energía, se relaciona y aprende
-2. Su performance review — qué hizo bien, dónde mejorar, el feedback concreto de su manager
+2. Sus documentos — performance review, CliftonStrengths, feedback 360, u otros que haya subido
 3. Los Leadership Principles de CookUnity — los valores y comportamientos que la empresa espera
 
 VALIDACIÓN DE IDENTIDAD — MUY IMPORTANTE:
-Al inicio de cada conversación o cuando recibas el performance review, verificá si el nombre del empleado registrado coincide con el nombre de la persona evaluada en el review. Si detectás una discrepancia (por ejemplo, el usuario se llama "Juan García" pero el review es de "María López"), mencionalo de forma amable y directa: "Noto que tu nombre no coincide con el del review. ¿Es tuyo este documento?" No bloquees la conversación, pero sí dejá claro lo que observás.
+Al inicio de cada conversación o cuando recibas documentos, verificá si el nombre del empleado registrado coincide con el nombre de la persona evaluada en los documentos. Si detectás una discrepancia (por ejemplo, el usuario se llama "Juan García" pero el documento es de "María López"), mencionalo de forma amable y directa: "Noto que tu nombre no coincide con el del documento. ¿Es tuyo?" No bloquees la conversación, pero sí dejá claro lo que observás.
 
 TU TRABAJO:
 - Cruzar estas tres fuentes para dar orientación concreta y personalizada
 - Ayudar al empleado a entender cómo mejorar sus puntos débiles de una forma que respete su diseño
 - Mostrar cómo sus fortalezas naturales se alinean con los principios de CookUnity
 - Dar estrategias específicas, no genéricas
-- Nunca inventés nada — todo debe estar anclado en su diseño, su review o los principios de CookUnity
+- Nunca inventés nada — todo debe estar anclado en su diseño, sus documentos o los principios de CookUnity
 
 TONO:
 - Directo, cálido, sin vueltas
@@ -99,7 +99,6 @@ async function dbFetch(endpoint, opts = {}) {
   return r.json();
 }
 
-// ── Welcome Screen ───────────────────────────────────────────────────────────
 // ── PasswordField component ──────────────────────────────────────────────────
 function PasswordField({ placeholder, value, onChange, onEnter, style }) {
   const [show, setShow] = React.useState(false);
@@ -193,10 +192,7 @@ function Welcome({ go, lang, setLang }) {
   const es = lang === "es";
   return (
     <div style={{ minHeight: "100vh", background: CU_DARK, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", position: "relative", overflow: "hidden" }}>
-      {/* Background texture */}
       <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 20% 80%, rgba(184,154,78,.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(184,154,78,.05) 0%, transparent 50%)", pointerEvents: "none" }} />
-
-      {/* Lang toggle */}
       <div style={{ position: "absolute", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".5rem" }}>
         {["es", "en"].map(l => (
           <button key={l} onClick={() => setLang(l)}
@@ -205,8 +201,6 @@ function Welcome({ go, lang, setLang }) {
           </button>
         ))}
       </div>
-
-      {/* Logo */}
       <div style={{ marginBottom: "3rem", textAlign: "center" }}>
         <div style={{ fontFamily: "monospace", fontSize: ".6rem", letterSpacing: ".4em", color: CU_ORANGE, marginBottom: ".5rem", textTransform: "uppercase" }}>Cook × Unity</div>
         <div style={{ fontFamily: GEORGIA, fontSize: "clamp(2rem, 5vw, 3.5rem)", color: "#fff", lineHeight: 1.1, fontWeight: 400 }}>
@@ -222,8 +216,6 @@ function Welcome({ go, lang, setLang }) {
             : "A tool that combines your Human Design with your performance review to give you personalized growth strategies."}
         </div>
       </div>
-
-      {/* CTAs */}
       <div style={{ display: "flex", flexDirection: "column", gap: ".8rem", width: "100%", maxWidth: 320 }}>
         <button onClick={() => go("register")}
           style={{ background: CU_ORANGE, color: CU_DARK, border: "none", borderRadius: 28, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".9em 2em", cursor: "pointer", textTransform: "uppercase", fontWeight: 700 }}>
@@ -234,7 +226,6 @@ function Welcome({ go, lang, setLang }) {
           {es ? "Ya tengo cuenta" : "I already have an account"}
         </button>
       </div>
-
       <div style={{ position: "absolute", bottom: "1.5rem", fontFamily: "monospace", fontSize: ".45rem", color: "rgba(255,255,255,.2)", letterSpacing: ".15em" }}>
         SIMPLE × COOKUNITY · 2026
       </div>
@@ -269,7 +260,6 @@ function Register({ go, setEmail: setParentEmail, lang, setLang }) {
       });
       if (!res.ok) { setErr(es ? "Error al registrar." : "Registration error."); setLoading(false); return; }
       setParentEmail(emailClean);
-      // Send verification email
       fetch("/api/send-verification", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailClean, nombre: f.nom, lang })
@@ -304,20 +294,8 @@ function Register({ go, setEmail: setParentEmail, lang, setLang }) {
           </div>
           <div style={{ height: ".8rem" }} />
           <input type="email" placeholder="Email" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} style={inp} />
-          <PasswordField
-            placeholder={es ? "Contraseña" : "Password"}
-            value={f.pass}
-            onChange={v => setF({ ...f, pass: v })}
-            onEnter={submit}
-            style={inp}
-          />
-          <PasswordField
-            placeholder={es ? "Repetir contraseña" : "Confirm password"}
-            value={f.pass2 || ""}
-            onChange={v => setF({ ...f, pass2: v })}
-            onEnter={submit}
-            style={inp}
-          />
+          <PasswordField placeholder={es ? "Contraseña" : "Password"} value={f.pass} onChange={v => setF({ ...f, pass: v })} onEnter={submit} style={inp} />
+          <PasswordField placeholder={es ? "Repetir contraseña" : "Confirm password"} value={f.pass2 || ""} onChange={v => setF({ ...f, pass2: v })} onEnter={submit} style={inp} />
           {err && <div style={{ color: "#e07070", fontSize: ".78rem", marginBottom: ".8rem", fontFamily: NUNITO }}>{err}</div>}
           <button onClick={submit} disabled={loading}
             style={{ background: CU_ORANGE, color: CU_DARK, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: loading ? "wait" : "pointer", textTransform: "uppercase", width: "100%", fontWeight: 700, opacity: loading ? 0.6 : 1 }}>
@@ -354,7 +332,6 @@ function Login({ go, setEmail: setParentEmail, setDynamicUser, lang, setLang }) 
       setParentEmail(user.email);
       setDynamicUser(user);
       if (!user.diseno) go("onboarding");
-      else if (!user.performance_review) go("upload");
       else go("chat");
     } catch { setErr(es ? "Error de conexión." : "Connection error."); }
     setLoading(false);
@@ -378,13 +355,7 @@ function Login({ go, setEmail: setParentEmail, setDynamicUser, lang, setLang }) 
           <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".4rem" }}>{es ? "Ingresar" : "Sign in"}</div>
           <div style={{ color: C.dim, fontSize: ".8rem", marginBottom: "1.8rem", fontFamily: NUNITO }}>CookUnity</div>
           <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} style={inp} />
-          <PasswordField
-            placeholder={es ? "Contraseña" : "Password"}
-            value={pass}
-            onChange={v => setPass(v)}
-            onEnter={submit}
-            style={inp}
-          />
+          <PasswordField placeholder={es ? "Contraseña" : "Password"} value={pass} onChange={v => setPass(v)} onEnter={submit} style={inp} />
           {err && <div style={{ color: "#e07070", fontSize: ".78rem", marginBottom: ".8rem", fontFamily: NUNITO }}>{err}</div>}
           <button onClick={submit} disabled={loading}
             style={{ background: CU_ORANGE, color: CU_DARK, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: loading ? "wait" : "pointer", textTransform: "uppercase", width: "100%", fontWeight: 700, opacity: loading ? 0.6 : 1 }}>
@@ -459,12 +430,7 @@ function Onboarding({ go, userEmail, setDynamicUser, lang, setLang }) {
           </div>
           <input type="date" value={f.fecha} onChange={e => setF({ ...f, fecha: e.target.value })} style={inp} />
           <input type="time" value={f.hora} onChange={e => setF({ ...f, hora: e.target.value })} style={inp} />
-          <CityInput
-            value={f.lugar}
-            onChange={v => setF({ ...f, lugar: v })}
-            placeholder={es ? "Ciudad de nacimiento" : "City of birth"}
-            style={inp}
-          />
+          <CityInput value={f.lugar} onChange={v => setF({ ...f, lugar: v })} placeholder={es ? "Ciudad de nacimiento" : "City of birth"} style={inp} />
           {err && <div style={{ color: "#e07070", fontSize: ".78rem", marginBottom: ".8rem", fontFamily: NUNITO }}>{err}</div>}
           <div style={{ height: "1rem" }} />
           <button onClick={calcular} disabled={loading}
@@ -477,58 +443,62 @@ function Onboarding({ go, userEmail, setDynamicUser, lang, setLang }) {
   );
 }
 
-// ── Upload Performance Review ─────────────────────────────────────────────────
-function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
+// ── Documentos ────────────────────────────────────────────────────────────────
+function Documentos({ go, userEmail, isModal = false, lang, setLang }) {
   const es = lang === "es";
+  const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState("");
+  const [modo, setModo] = useState("pdf");
   const [texto, setTexto] = useState("");
-  const [modo, setModo] = useState("pdf"); // "pdf" or "text"
-  const C = { txt: "#f0ebe0", dim: "rgba(240,235,224,.45)" };
-
-  async function guardar() {
-    if (!texto.trim()) { setErr(es ? "El contenido está vacío." : "Content is empty."); return; }
-    setLoading(true); setErr("");
-    try {
-      const saveRes = await fetch("/api/update-usuario", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "update-cu-usuario", email: userEmail, fields: { performance_review: texto.trim() } }),
-      });
-      const updRes = await fetch("/api/update-usuario", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "get-cu-usuario", email: userEmail })
-      });
-      const updData = await updRes.json();
-      if (Array.isArray(updData) && updData[0]) setDynamicUser(updData[0]);
-      go("chat");
-    } catch(e) { console.error("Error guardar:", e); setErr(es ? "Error al guardar: " + e.message : "Error saving: " + e.message); }
-    setLoading(false);
-  }
-
+  const [nombre, setNombre] = useState("");
   const [loadingMsg, setLoadingMsg] = useState(0);
+  const [showForm, setShowForm] = useState(false);
+
   const PDF_MSGS_ES = [
     "Preparate un buen café mientras analizamos el documento...",
-    "Leyendo tu review con atención...",
-    "Procesando el feedback de tu manager...",
+    "Leyendo tu documento con atención...",
+    "Procesando el contenido...",
     "Casi listo, extrayendo los puntos clave...",
     "Un momento más, vale la pena la espera...",
   ];
   const PDF_MSGS_EN = [
     "Grab a coffee while we analyze your document...",
-    "Reading your review carefully...",
-    "Processing your manager's feedback...",
+    "Reading your document carefully...",
+    "Processing the content...",
     "Almost done, extracting key points...",
     "Just a moment more, it's worth the wait...",
   ];
 
+  const inp = {
+    width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(184,154,78,.2)",
+    borderRadius: 12, color: "#f0ebe0", fontFamily: NUNITO, fontSize: ".9rem",
+    padding: ".7rem 1rem", outline: "none", boxSizing: "border-box", marginBottom: ".8rem"
+  };
+
+  useEffect(() => { cargarDocs(); }, []);
+
+  async function cargarDocs() {
+    setLoading(true);
+    try {
+      const r = await fetch("/api/update-usuario", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get-cu-documentos", email: userEmail })
+      });
+      const data = await r.json();
+      if (Array.isArray(data)) setDocs(data);
+    } catch {}
+    setLoading(false);
+  }
+
   async function parsePDF(file) {
     if (file.size > 5 * 1024 * 1024) {
-      setErr(es ? "El PDF supera los 5MB. Intentá con un archivo más liviano." : "PDF exceeds 5MB. Please try a lighter file.");
-      return;
+      setErr(es ? "El PDF supera los 5MB." : "PDF exceeds 5MB."); return;
     }
-    setLoading(true); setErr(""); setLoadingMsg(0);
+    setUploading(true); setErr(""); setLoadingMsg(0);
     const msgInterval = setInterval(() => {
-      setLoadingMsg(prev => prev < (es ? PDF_MSGS_ES.length - 1 : PDF_MSGS_EN.length - 1) ? prev + 1 : prev);
+      setLoadingMsg(prev => prev < 4 ? prev + 1 : prev);
     }, 7000);
     try {
       const base64 = await new Promise((res, rej) => {
@@ -538,40 +508,200 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
         r.readAsDataURL(file);
       });
       const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 4000,
+          model: "claude-sonnet-4-20250514", max_tokens: 4000,
           messages: [{
             role: "user",
             content: [
               { type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } },
-              { type: "text", text: "Extract all the text content from this performance review document. Return only the extracted text, preserving structure with line breaks. No commentary." }
+              { type: "text", text: "Extract all the text content from this document. Return only the extracted text, preserving structure with line breaks. No commentary." }
             ]
           }]
         })
       });
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error("Error API:", errText);
-        setErr(es ? "Error al procesar el PDF." : "Error processing PDF.");
-        setLoading(false); return;
-      }
       const data = await response.json();
       const extracted = data.content?.[0]?.text || "";
-      if (!extracted) {
-        setErr(es ? "No se pudo extraer texto del PDF." : "Could not extract text from PDF.");
-        setLoading(false); return;
-      }
+      if (!extracted) { setErr(es ? "No se pudo extraer texto del PDF." : "Could not extract text from PDF."); setUploading(false); return; }
       setTexto(extracted);
-    } catch(e) {
-      console.error("Error parsePDF:", e);
-      setErr(es ? "Error al leer el PDF: " + e.message : "Error reading PDF: " + e.message);
-    }
+      if (!nombre) setNombre(file.name.replace(".pdf", ""));
+    } catch (e) { setErr(es ? "Error al leer el PDF." : "Error reading PDF."); }
     clearInterval(msgInterval);
-    setLoading(false);
+    setUploading(false);
   }
+
+  async function guardar() {
+    if (!texto.trim()) { setErr(es ? "El contenido está vacío." : "Content is empty."); return; }
+    const nombreFinal = nombre.trim() || (es ? "Documento sin nombre" : "Untitled document");
+    setUploading(true); setErr("");
+    try {
+      await fetch("/api/update-usuario", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "insert-cu-documento",
+          fields: { usuario_email: userEmail, nombre: nombreFinal, contenido: texto.trim(), activo: true }
+        })
+      });
+      setTexto(""); setNombre(""); setShowForm(false);
+      await cargarDocs();
+    } catch { setErr(es ? "Error al guardar." : "Error saving."); }
+    setUploading(false);
+  }
+
+  async function toggleActivo(doc) {
+    try {
+      await fetch("/api/update-usuario", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update-cu-documento", id: doc.id, fields: { activo: !doc.activo } })
+      });
+      setDocs(prev => prev.map(d => d.id === doc.id ? { ...d, activo: !d.activo } : d));
+    } catch {}
+  }
+
+  async function eliminar(id) {
+    try {
+      await fetch("/api/update-usuario", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete-cu-documento", id })
+      });
+      setDocs(prev => prev.filter(d => d.id !== id));
+    } catch {}
+  }
+
+  const content = (
+    <div style={{ padding: isModal ? "1.5rem 2rem 2rem" : "0" }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+        <div>
+          <div style={{ fontFamily: GEORGIA, fontSize: "1.3rem", color: "#f0ebe0" }}>
+            {es ? "Mis documentos" : "My documents"}
+          </div>
+          <div style={{ color: "rgba(240,235,224,.4)", fontSize: ".75rem", fontFamily: NUNITO, marginTop: ".2rem" }}>
+            {es ? "Se inyectan en el chat cuando están activos." : "Injected into the chat when active."}
+          </div>
+        </div>
+        <button onClick={() => { setShowForm(v => !v); setTexto(""); setNombre(""); setErr(""); }}
+          style={{ background: showForm ? "transparent" : CU_ORANGE, color: showForm ? "rgba(240,235,224,.4)" : CU_DARK, border: `1px solid ${showForm ? "rgba(240,235,224,.2)" : CU_ORANGE}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".15em", padding: ".4em 1em", cursor: "pointer", textTransform: "uppercase", fontWeight: 700 }}>
+          {showForm ? (es ? "Cancelar" : "Cancel") : (es ? "+ Agregar" : "+ Add")}
+        </button>
+      </div>
+
+      {/* Form */}
+      {showForm && (
+        <div style={{ border: "1px solid rgba(184,154,78,.2)", borderRadius: 12, padding: "1.5rem", marginBottom: "1.5rem", background: "rgba(255,255,255,.02)" }}>
+          <input
+            placeholder={es ? "Nombre del documento (ej: Performance Review 2025)" : "Document name (e.g. Performance Review 2025)"}
+            value={nombre}
+            onChange={e => setNombre(e.target.value)}
+            style={inp}
+          />
+          <div style={{ display: "flex", gap: ".5rem", marginBottom: "1rem" }}>
+            {["pdf", "text"].map(m => (
+              <button key={m} onClick={() => setModo(m)}
+                style={{ background: modo === m ? "rgba(184,154,78,.15)" : "transparent", border: `1px solid ${modo === m ? CU_ORANGE : "rgba(184,154,78,.2)"}`, borderRadius: 20, color: modo === m ? CU_ORANGE : "rgba(240,235,224,.45)", fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".15em", padding: ".4em 1em", cursor: "pointer", textTransform: "uppercase" }}>
+                {m === "pdf" ? "PDF" : (es ? "Texto" : "Text")}
+              </button>
+            ))}
+          </div>
+
+          {modo === "pdf" ? (
+            <div>
+              <label style={{ display: "block", border: "2px dashed rgba(184,154,78,.3)", borderRadius: 12, padding: "1.5rem", textAlign: "center", cursor: "pointer", color: "rgba(240,235,224,.45)", fontFamily: NUNITO, fontSize: ".85rem", lineHeight: 1.6 }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = CU_ORANGE}
+                onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(184,154,78,.3)"}>
+                <input type="file" accept=".pdf" style={{ display: "none" }} onChange={e => e.target.files[0] && parsePDF(e.target.files[0])} />
+                {uploading ? (
+                  <div>
+                    <HourglassAnim />
+                    <div>{es ? PDF_MSGS_ES[loadingMsg] : PDF_MSGS_EN[loadingMsg]}</div>
+                    <div style={{ fontSize: ".7rem", marginTop: ".5rem", opacity: .5 }}>{es ? "Hasta 30 segundos" : "Up to 30 seconds"}</div>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ fontSize: "1.5rem", marginBottom: ".5rem" }}>📄</div>
+                    {texto
+                      ? (es ? "✓ PDF procesado. Podés cambiar el nombre y guardar." : "✓ PDF processed. You can rename and save.")
+                      : (es ? "Hacé clic para seleccionar tu PDF" : "Click to select your PDF")}
+                    <div style={{ fontSize: ".7rem", marginTop: ".3rem", opacity: .6 }}>{es ? "Solo PDF · Máx. 5MB" : "PDF only · Max. 5MB"}</div>
+                  </>
+                )}
+              </label>
+            </div>
+          ) : (
+            <textarea
+              value={texto}
+              onChange={e => setTexto(e.target.value)}
+              placeholder={es ? "Pegá el texto acá..." : "Paste your text here..."}
+              style={{ width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(184,154,78,.2)", borderRadius: 12, color: "#f0ebe0", fontFamily: NUNITO, fontSize: ".85rem", padding: "1rem", outline: "none", resize: "vertical", lineHeight: 1.6, minHeight: 150, boxSizing: "border-box" }}
+            />
+          )}
+
+          {err && <div style={{ color: "#e07070", fontSize: ".78rem", margin: ".8rem 0", fontFamily: NUNITO }}>{err}</div>}
+
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1rem" }}>
+            <button onClick={guardar} disabled={uploading || !texto.trim()}
+              style={{ background: CU_ORANGE, color: CU_DARK, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".6rem", letterSpacing: ".25em", padding: ".75em 1.8em", cursor: uploading || !texto.trim() ? "not-allowed" : "pointer", textTransform: "uppercase", fontWeight: 700, opacity: uploading || !texto.trim() ? 0.5 : 1 }}>
+              {uploading ? (es ? "Guardando..." : "Saving...") : (es ? "Guardar" : "Save")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Lista de docs */}
+      {loading ? (
+        <div style={{ color: "rgba(240,235,224,.3)", fontFamily: NUNITO, fontSize: ".82rem", textAlign: "center", padding: "2rem" }}>
+          {es ? "Cargando documentos..." : "Loading documents..."}
+        </div>
+      ) : docs.length === 0 && !showForm ? (
+        <div style={{ color: "rgba(240,235,224,.3)", fontFamily: NUNITO, fontSize: ".82rem", textAlign: "center", padding: "2rem", border: "1px dashed rgba(184,154,78,.15)", borderRadius: 12 }}>
+          {es ? "Todavía no subiste ningún documento." : "You haven't uploaded any documents yet."}
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: ".6rem" }}>
+          {docs.map(doc => (
+            <div key={doc.id} style={{ display: "flex", alignItems: "center", gap: "1rem", padding: ".9rem 1.2rem", background: doc.activo ? "rgba(184,154,78,.06)" : "rgba(255,255,255,.02)", border: `1px solid ${doc.activo ? "rgba(184,154,78,.25)" : "rgba(255,255,255,.06)"}`, borderRadius: 10 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: NUNITO, fontSize: ".85rem", color: doc.activo ? "#f0ebe0" : "rgba(240,235,224,.35)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {doc.nombre}
+                </div>
+                <div style={{ fontFamily: "monospace", fontSize: ".42rem", letterSpacing: ".1em", color: doc.activo ? CU_ORANGE : "rgba(240,235,224,.2)", marginTop: ".2rem", textTransform: "uppercase" }}>
+                  {doc.activo ? (es ? "Activo" : "Active") : (es ? "Inactivo" : "Inactive")}
+                </div>
+              </div>
+              <button onClick={() => toggleActivo(doc)}
+                style={{ background: doc.activo ? "rgba(184,154,78,.15)" : "rgba(255,255,255,.04)", border: `1px solid ${doc.activo ? CU_ORANGE : "rgba(255,255,255,.1)"}`, borderRadius: 20, color: doc.activo ? CU_ORANGE : "rgba(240,235,224,.3)", fontFamily: "monospace", fontSize: ".42rem", letterSpacing: ".12em", padding: ".35em .8em", cursor: "pointer", textTransform: "uppercase", flexShrink: 0 }}>
+                {doc.activo ? (es ? "Desactivar" : "Disable") : (es ? "Activar" : "Enable")}
+              </button>
+              <button onClick={() => eliminar(doc.id)}
+                style={{ background: "none", border: "none", color: "rgba(240,235,224,.2)", cursor: "pointer", fontSize: "1rem", padding: "0 .2rem", flexShrink: 0, lineHeight: 1 }}
+                onMouseEnter={e => e.currentTarget.style.color = "#e07070"}
+                onMouseLeave={e => e.currentTarget.style.color = "rgba(240,235,224,.2)"}>
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Botón saltar (solo en onboarding, no en modal) */}
+      {!isModal && (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1.5rem" }}>
+          <button onClick={() => go("chat")}
+            style={{ background: "none", border: "none", color: "rgba(240,235,224,.3)", cursor: "pointer", fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".15em" }}>
+            {es ? "Saltar por ahora →" : "Skip for now →"}
+          </button>
+          {docs.length > 0 && (
+            <button onClick={() => go("chat")}
+              style={{ background: CU_ORANGE, color: CU_DARK, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".6rem", letterSpacing: ".25em", padding: ".75em 1.8em", cursor: "pointer", textTransform: "uppercase", fontWeight: 700 }}>
+              {es ? "Continuar al chat →" : "Continue to chat →"}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  if (isModal) return content;
 
   return (
     <div style={{ minHeight: "100vh", background: CU_DARK, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
@@ -584,78 +714,19 @@ function Upload({ go, userEmail, setDynamicUser, lang, setLang }) {
         ))}
       </div>
       <div style={{ width: "100%", maxWidth: 560 }}>
+        <div style={{ fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".3em", color: CU_ORANGE, marginBottom: ".5rem", textTransform: "uppercase" }}>
+          {es ? "Paso 2 de 2" : "Step 2 of 2"}
+        </div>
         <div style={{ border: "1px solid rgba(184,154,78,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)" }}>
-          <div style={{ fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".3em", color: CU_ORANGE, marginBottom: ".5rem", textTransform: "uppercase" }}>
-            {es ? "Paso 2 de 2" : "Step 2 of 2"}
-          </div>
           <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".4rem" }}>
-            {es ? "Tu performance review" : "Your performance review"}
+            {es ? "Tus documentos" : "Your documents"}
           </div>
-          <div style={{ color: C.dim, fontSize: ".82rem", marginBottom: "1.5rem", fontFamily: NUNITO, lineHeight: 1.6 }}>
+          <div style={{ color: "rgba(240,235,224,.45)", fontSize: ".82rem", marginBottom: "1.8rem", fontFamily: NUNITO, lineHeight: 1.6 }}>
             {es
-              ? "Subí tu performance review. La IA lo usará junto a tu Diseño Humano para darte estrategias personalizadas."
-              : "Upload your performance review. The AI will use it with your Human Design to give you personalized strategies."}
+              ? "Subí tu performance review, CliftonStrengths u otros documentos relevantes. La IA los usará en el chat."
+              : "Upload your performance review, CliftonStrengths, or other relevant documents. The AI will use them in the chat."}
           </div>
-
-          {/* Mode toggle */}
-          <div style={{ display: "flex", gap: ".5rem", marginBottom: "1.2rem" }}>
-            {["pdf", "text"].map(m => (
-              <button key={m} onClick={() => setModo(m)}
-                style={{ background: modo === m ? "rgba(184,154,78,.15)" : "transparent", border: `1px solid ${modo === m ? CU_ORANGE : "rgba(184,154,78,.2)"}`, borderRadius: 20, color: modo === m ? CU_ORANGE : C.dim, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".15em", padding: ".4em 1em", cursor: "pointer", textTransform: "uppercase" }}>
-                {m === "pdf" ? "PDF" : (es ? "Texto" : "Text")}
-              </button>
-            ))}
-          </div>
-
-          {modo === "pdf" ? (
-            <div>
-              <label style={{ display: "block", border: "2px dashed rgba(184,154,78,.3)", borderRadius: 12, padding: "2rem", textAlign: "center", cursor: "pointer", color: C.dim, fontFamily: NUNITO, fontSize: ".85rem", lineHeight: 1.6, transition: "border-color .2s" }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = CU_ORANGE}
-                onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(184,154,78,.3)"}>
-                <input type="file" accept=".pdf" style={{ display: "none" }} onChange={e => e.target.files[0] && parsePDF(e.target.files[0])} />
-                {loading ? (
-                  <div style={{ lineHeight: 1.7 }}>
-                    <HourglassAnim />
-                    <div>{es ? PDF_MSGS_ES[loadingMsg] : PDF_MSGS_EN[loadingMsg]}</div>
-                    <div style={{ fontSize: ".7rem", marginTop: ".5rem", opacity: .5 }}>{es ? "Esto puede tardar hasta 30 segundos" : "This may take up to 30 seconds"}</div>
-                  </div>
-                ) : (
-                  <>
-                    <div style={{ fontSize: "1.5rem", marginBottom: ".5rem" }}>📄</div>
-                    {es ? "Hacé clic para seleccionar tu PDF" : "Click to select your PDF"}
-                    <div style={{ fontSize: ".75rem", marginTop: ".3rem", opacity: .6 }}>{es ? "Solo archivos PDF · Máx. 5MB" : "PDF files only · Max. 5MB"}</div>
-                  </>
-                )}
-              </label>
-              {texto && (
-                <div style={{ marginTop: "1rem", padding: "1rem", background: "rgba(184,154,78,.05)", border: "1px solid rgba(184,154,78,.15)", borderRadius: 10, fontSize: ".78rem", color: C.dim, fontFamily: NUNITO, lineHeight: 1.6, maxHeight: 200, overflowY: "auto" }}>
-                  <div style={{ color: CU_ORANGE, fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".2em", marginBottom: ".5rem" }}>
-                    {es ? "TEXTO EXTRAÍDO" : "EXTRACTED TEXT"}
-                  </div>
-                  {texto.slice(0, 500)}...
-                </div>
-              )}
-            </div>
-          ) : (
-            <textarea
-              value={texto}
-              onChange={e => setTexto(e.target.value)}
-              placeholder={es ? "Pegá el texto de tu performance review aquí..." : "Paste your performance review text here..."}
-              style={{ width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(184,154,78,.2)", borderRadius: 12, color: C.txt, fontFamily: NUNITO, fontSize: ".85rem", padding: "1rem", outline: "none", resize: "vertical", lineHeight: 1.6, minHeight: 200, boxSizing: "border-box" }}
-            />
-          )}
-
-          {err && <div style={{ color: "#e07070", fontSize: ".78rem", margin: ".8rem 0", fontFamily: NUNITO }}>{err}</div>}
-
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1.2rem" }}>
-            <button onClick={() => go("chat")} style={{ background: "none", border: "none", color: C.dim, cursor: "pointer", fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".15em" }}>
-              {es ? "Saltar por ahora →" : "Skip for now →"}
-            </button>
-            <button onClick={guardar} disabled={loading || !texto.trim()}
-              style={{ background: CU_ORANGE, color: CU_DARK, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".6rem", letterSpacing: ".25em", padding: ".75em 1.8em", cursor: loading || !texto.trim() ? "not-allowed" : "pointer", textTransform: "uppercase", fontWeight: 700, opacity: loading || !texto.trim() ? 0.5 : 1 }}>
-              {loading ? (es ? "Guardando..." : "Saving...") : (es ? "Continuar al chat" : "Continue to chat")}
-            </button>
-          </div>
+          <Documentos go={go} userEmail={userEmail} isModal={true} lang={lang} setLang={setLang} />
         </div>
       </div>
     </div>
@@ -670,7 +741,8 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [convId, setConvId] = useState(null);
-  const [showUpload, setShowUpload] = useState(false);
+  const [showDocs, setShowDocs] = useState(false);
+  const [docsActivos, setDocsActivos] = useState([]);
   const [darkMode, setDarkMode] = useState(true);
   const chatRef = useRef(null);
   const lastUserRef = useRef(null);
@@ -694,6 +766,12 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
           setMsgs(convData[0].mensajes);
           setConvId(convData[0].id);
         }
+        const docsRes = await fetch("/api/update-usuario", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "get-cu-documentos", email: userEmail })
+        });
+        const docsData = await docsRes.json();
+        if (Array.isArray(docsData)) setDocsActivos(docsData.filter(d => d.activo));
       } catch {}
     }
     load();
@@ -707,17 +785,31 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
 
   function buildSystemPrompt() {
     const d = user?.diseno;
-    const review = user?.performance_review;
     let sys = SYSTEM_PROMPT_CU + "\n\n";
     if (d) {
       sys += `DISEÑO HUMANO DE ${user.nombre} ${user.apellido}:\n`;
       sys += `Tipo: ${d.tipo}\nAutoridad: ${d.autoridad}\nPerfil: ${d.perfil}\nEstrategia: ${d.estrategia}\nFirma: ${d.firma}\nNo-self: ${d.no_self}\nEntorno: ${d.entorno}\n\n`;
     }
-    if (review) {
-      sys += `PERFORMANCE REVIEW:\n${review}\n\n`;
+    if (docsActivos.length > 0) {
+      sys += `DOCUMENTOS DEL USUARIO:\n`;
+      docsActivos.forEach(doc => {
+        sys += `\n--- ${doc.nombre} ---\n${doc.contenido}\n`;
+      });
+      sys += "\n";
     }
     sys += CU_PRINCIPLES;
     return sys;
+  }
+
+  async function recargarDocs() {
+    try {
+      const docsRes = await fetch("/api/update-usuario", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get-cu-documentos", email: userEmail })
+      });
+      const docsData = await docsRes.json();
+      if (Array.isArray(docsData)) setDocsActivos(docsData.filter(d => d.activo));
+    } catch {}
   }
 
   async function guardarConv(mensajes, currentId) {
@@ -763,7 +855,6 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
     shouldScrollRef.current = false;
   }
 
-  const hasReview = !!user?.performance_review;
   const hasDH = !!user?.diseno;
 
   return (
@@ -787,20 +878,16 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: ".8rem" }}>
-          {!hasReview && (
-            <button onClick={() => setShowUpload(true)}
-              style={{ background: "rgba(184,154,78,.15)", border: `1px solid ${CU_ORANGE}`, borderRadius: 20, color: CU_ORANGE, fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".15em", padding: ".35em .8em", cursor: "pointer", textTransform: "uppercase" }}>
-              {es ? "+ Subir review" : "+ Upload review"}
-            </button>
-          )}
-          {/* Lang */}
+          <button onClick={() => setShowDocs(true)}
+            style={{ background: "rgba(184,154,78,.15)", border: `1px solid ${CU_ORANGE}`, borderRadius: 20, color: CU_ORANGE, fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".15em", padding: ".35em .8em", cursor: "pointer", textTransform: "uppercase" }}>
+            {es ? "Mis documentos" : "My documents"}
+          </button>
           {["es", "en"].map(l => (
             <button key={l} onClick={() => setLang(l)}
               style={{ background: lang === l ? "rgba(184,154,78,.15)" : "transparent", color: lang === l ? CU_ORANGE : dim, border: `1px solid ${lang === l ? CU_ORANGE : "rgba(184,154,78,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
               {l}
             </button>
           ))}
-          {/* Dark mode */}
           <button onClick={() => setDarkMode(v => !v)}
             style={{ background: "none", border: "none", cursor: "pointer", padding: 4, opacity: .8, display: "flex", alignItems: "center" }}>
             {darkMode
@@ -814,26 +901,15 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
         </div>
       </div>
 
-      {/* Context warning if no review */}
-      {!hasReview && (
-        <div style={{ background: "rgba(184,154,78,.08)", borderBottom: `1px solid rgba(184,154,78,.15)`, padding: ".7rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ color: CU_ORANGE, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".15em" }}>
-            {es ? "⚠ Sin performance review — las respuestas serán menos personalizadas" : "⚠ No performance review — answers will be less personalized"}
-          </div>
-          <button onClick={() => setShowUpload(true)} style={{ background: "none", border: "none", color: CU_ORANGE, fontFamily: "monospace", fontSize: ".45rem", cursor: "pointer", letterSpacing: ".1em", textDecoration: "underline" }}>
-            {es ? "Subir ahora" : "Upload now"}
-          </button>
-        </div>
-      )}
-
-      {/* Upload modal */}
-      {showUpload && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "1rem" }}>
-          <div style={{ background: CU_DARK, border: `1px solid rgba(184,154,78,.25)`, borderRadius: 16, width: "100%", maxWidth: 520, maxHeight: "80vh", overflowY: "auto" }}>
+      {/* Modal Mis documentos */}
+      {showDocs && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "1rem" }}>
+          <div style={{ background: CU_DARK, border: `1px solid rgba(184,154,78,.25)`, borderRadius: 16, width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto" }}>
             <div style={{ display: "flex", justifyContent: "flex-end", padding: "1rem 1.5rem 0" }}>
-              <button onClick={() => setShowUpload(false)} style={{ background: "none", border: "none", color: dim, cursor: "pointer", fontSize: "1.2rem" }}>×</button>
+              <button onClick={() => { setShowDocs(false); recargarDocs(); }}
+                style={{ background: "none", border: "none", color: "rgba(240,235,224,.4)", cursor: "pointer", fontSize: "1.2rem" }}>×</button>
             </div>
-            <Upload go={(s) => { setShowUpload(false); }} userEmail={userEmail} setDynamicUser={(u) => { setUser(u); setShowUpload(false); }} lang={lang} setLang={setLang} />
+            <Documentos go={() => {}} userEmail={userEmail} isModal={true} lang={lang} setLang={setLang} />
           </div>
         </div>
       )}
@@ -842,74 +918,74 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
       <div className="cu-scroll" ref={chatRef} style={{ flex: 1, overflowY: "auto", padding: "2rem 0", display: "flex", flexDirection: "column" }}>
         <div style={{ flex: 1, maxWidth: 900, margin: "0 auto", width: "100%", padding: "0 clamp(60px, 10vw, 150px)", display: "flex", flexDirection: "column", gap: "1.8rem" }}>
 
-        {msgs.length === 0 && (
-          <div style={{ textAlign: "center", padding: "3rem 0" }}>
-            <div style={{ fontFamily: GEORGIA, fontSize: "1.3rem", color: txt, marginBottom: ".8rem" }}>
-              {es ? `Hola, ${user?.nombre}.` : `Hello, ${user?.nombre}.`}
-            </div>
-            <div style={{ color: dim, fontSize: ".88rem", fontFamily: NUNITO, maxWidth: 500, margin: "0 auto", lineHeight: 1.7 }}>
-              {es
-                ? "Estoy acá para ayudarte a crecer dentro de CookUnity de una forma que sea auténtica a tu diseño. Podés preguntarme sobre tu performance review, cómo mejorar áreas específicas, o cómo tus fortalezas se alinean con los principios de la empresa."
-                : "I'm here to help you grow within CookUnity in a way that's authentic to your design. You can ask me about your performance review, how to improve specific areas, or how your strengths align with the company's principles."}
-            </div>
-            {hasDH && (
-              <div style={{ display: "flex", gap: ".5rem", flexWrap: "wrap", justifyContent: "center", marginTop: "1.5rem" }}>
-                {[
-                  es ? "¿Cuáles son mis puntos más fuertes según mi diseño?" : "What are my strongest points according to my design?",
-                  es ? "¿Cómo puedo mejorar las áreas de desarrollo de mi review?" : "How can I improve my development areas from my review?",
-                  es ? "¿Cómo se alinea mi diseño con los Leadership Principles?" : "How does my design align with the Leadership Principles?",
-                ].map((q, i) => (
-                  <button key={i} onClick={() => { setInput(q); }}
-                    style={{ background: "rgba(184,154,78,.08)", border: `1px solid rgba(184,154,78,.2)`, borderRadius: 20, color: dim, fontFamily: NUNITO, fontSize: ".78rem", padding: ".5em 1em", cursor: "pointer", transition: "all .2s" }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = CU_ORANGE; e.currentTarget.style.color = CU_ORANGE; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(184,154,78,.2)"; e.currentTarget.style.color = dim; }}>
-                    {q}
-                  </button>
-                ))}
+          {msgs.length === 0 && (
+            <div style={{ textAlign: "center", padding: "3rem 0" }}>
+              <div style={{ fontFamily: GEORGIA, fontSize: "1.3rem", color: txt, marginBottom: ".8rem" }}>
+                {es ? `Hola, ${user?.nombre}.` : `Hello, ${user?.nombre}.`}
               </div>
-            )}
-          </div>
-        )}
-
-        {msgs.map((m, i) => (
-          <div key={i} ref={m.role === "user" ? lastUserRef : null}
-            style={{ maxWidth: "85%", alignSelf: m.role === "user" ? "flex-end" : "flex-start" }}>
-            {m.role === "user" ? (
-              <div style={{ fontSize: "1rem", fontStyle: "italic", color: darkMode ? "rgba(240,235,224,.55)" : "rgba(26,26,26,.5)", lineHeight: 1.7, fontFamily: NUNITO, textAlign: "right" }}>
-                {m.content}
+              <div style={{ color: dim, fontSize: ".88rem", fontFamily: NUNITO, maxWidth: 500, margin: "0 auto", lineHeight: 1.7 }}>
+                {es
+                  ? "Estoy acá para ayudarte a crecer dentro de CookUnity de una forma que sea auténtica a tu diseño. Podés preguntarme sobre tus documentos, cómo mejorar áreas específicas, o cómo tus fortalezas se alinean con los principios de la empresa."
+                  : "I'm here to help you grow within CookUnity in a way that's authentic to your design. You can ask me about your documents, how to improve specific areas, or how your strengths align with the company's principles."}
               </div>
-            ) : (
-              <div style={{ color: txt, fontFamily: GEORGIA, fontSize: ".95rem", lineHeight: 1.85 }}
-                dangerouslySetInnerHTML={{ __html: md(m.content) }} />
-            )}
-          </div>
-        ))}
+              {hasDH && (
+                <div style={{ display: "flex", gap: ".5rem", flexWrap: "wrap", justifyContent: "center", marginTop: "1.5rem" }}>
+                  {[
+                    es ? "¿Cuáles son mis puntos más fuertes según mi diseño?" : "What are my strongest points according to my design?",
+                    es ? "¿Cómo puedo mejorar las áreas de desarrollo de mi review?" : "How can I improve my development areas from my review?",
+                    es ? "¿Cómo se alinea mi diseño con los Leadership Principles?" : "How does my design align with the Leadership Principles?",
+                  ].map((q, i) => (
+                    <button key={i} onClick={() => { setInput(q); }}
+                      style={{ background: "rgba(184,154,78,.08)", border: `1px solid rgba(184,154,78,.2)`, borderRadius: 20, color: dim, fontFamily: NUNITO, fontSize: ".78rem", padding: ".5em 1em", cursor: "pointer", transition: "all .2s" }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = CU_ORANGE; e.currentTarget.style.color = CU_ORANGE; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(184,154,78,.2)"; e.currentTarget.style.color = dim; }}>
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-        {loading && (
-          <div style={{ display: "flex", gap: 5, padding: ".5rem 0" }}>
-            {[0, 1, 2].map(i => (
-              <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: CU_ORANGE, animation: "p 1.2s ease-in-out infinite", animationDelay: `${i * .2}s` }} />
-            ))}
-          </div>
-        )}
+          {msgs.map((m, i) => (
+            <div key={i} ref={m.role === "user" ? lastUserRef : null}
+              style={{ maxWidth: "85%", alignSelf: m.role === "user" ? "flex-end" : "flex-start" }}>
+              {m.role === "user" ? (
+                <div style={{ fontSize: "1rem", fontStyle: "italic", color: darkMode ? "rgba(240,235,224,.55)" : "rgba(26,26,26,.5)", lineHeight: 1.7, fontFamily: NUNITO, textAlign: "right" }}>
+                  {m.content}
+                </div>
+              ) : (
+                <div style={{ color: txt, fontFamily: GEORGIA, fontSize: ".95rem", lineHeight: 1.85 }}
+                  dangerouslySetInnerHTML={{ __html: md(m.content) }} />
+              )}
+            </div>
+          ))}
+
+          {loading && (
+            <div style={{ display: "flex", gap: 5, padding: ".5rem 0" }}>
+              {[0, 1, 2].map(i => (
+                <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: CU_ORANGE, animation: "p 1.2s ease-in-out infinite", animationDelay: `${i * .2}s` }} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Input */}
       <div style={{ padding: "1rem 0 1.5rem", borderTop: `1px solid rgba(184,154,78,.12)`, background: panelBg }}>
         <div style={{ maxWidth: 900, margin: "0 auto", width: "100%", padding: "0 clamp(60px, 10vw, 150px)", display: "flex", gap: ".8rem", alignItems: "flex-end" }}>
-        <textarea
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-          placeholder={es ? `Preguntá sobre tu desempeño, ${user?.nombre || ""}...` : `Ask about your performance, ${user?.nombre || ""}...`}
-          rows={1}
-          style={{ flex: 1, background: "transparent", border: "none", borderBottom: `1px solid rgba(184,154,78,.25)`, color: txt, fontFamily: GEORGIA, fontSize: ".95rem", padding: ".6rem 0", outline: "none", resize: "none", lineHeight: 1.5 }}
-        />
-        <button onClick={send} disabled={loading || !input.trim()}
-          style={{ border: `1px solid ${CU_ORANGE}`, borderRadius: 20, color: CU_ORANGE, fontFamily: "monospace", fontSize: ".6rem", letterSpacing: ".2em", padding: ".6em 1.2em", cursor: loading || !input.trim() ? "not-allowed" : "pointer", textTransform: "uppercase", background: "none", opacity: loading || !input.trim() ? 0.3 : 1 }}>
-          {es ? "Enviar" : "Send"}
-        </button>
+          <textarea
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+            placeholder={es ? `Preguntá sobre tu desempeño, ${user?.nombre || ""}...` : `Ask about your performance, ${user?.nombre || ""}...`}
+            rows={1}
+            style={{ flex: 1, background: "transparent", border: "none", borderBottom: `1px solid rgba(184,154,78,.25)`, color: txt, fontFamily: GEORGIA, fontSize: ".95rem", padding: ".6rem 0", outline: "none", resize: "none", lineHeight: 1.5 }}
+          />
+          <button onClick={send} disabled={loading || !input.trim()}
+            style={{ border: `1px solid ${CU_ORANGE}`, borderRadius: 20, color: CU_ORANGE, fontFamily: "monospace", fontSize: ".6rem", letterSpacing: ".2em", padding: ".6em 1.2em", cursor: loading || !input.trim() ? "not-allowed" : "pointer", textTransform: "uppercase", background: "none", opacity: loading || !input.trim() ? 0.3 : 1 }}>
+            {es ? "Enviar" : "Send"}
+          </button>
         </div>
       </div>
 
@@ -1107,7 +1183,7 @@ export default function App() {
       {screen === "recover" && <Recover go={go} lang={lang} setLang={setLang} />}
       {screen === "reset" && <Reset go={go} email={email} lang={lang} setLang={setLang} />}
       {screen === "onboarding" && <Onboarding go={go} userEmail={email} setDynamicUser={setDynamicUser} lang={lang} setLang={setLang} />}
-      {screen === "upload" && <Upload go={go} userEmail={email} setDynamicUser={setDynamicUser} lang={lang} setLang={setLang} />}
+      {screen === "upload" && <Documentos go={go} userEmail={email} isModal={false} lang={lang} setLang={setLang} />}
       {screen === "chat" && <Chat go={go} userEmail={email} dynamicUser={dynamicUser} lang={lang} setLang={setLang} />}
     </div>
   );
