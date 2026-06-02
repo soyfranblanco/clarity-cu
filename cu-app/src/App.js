@@ -101,6 +101,16 @@ function PasswordField({ placeholder, value, onChange, onEnter, style }) {
   );
 }
 
+// ── md helper ────────────────────────────────────────────────────────────────
+function md(t) {
+  return t
+    .replace(/^### (.+)$/gm, '<span style="color:#b89a4e">$1</span>')
+    .replace(/^## (.+)$/gm, '<span style="color:#b89a4e">$1</span>')
+    .replace(/^# (.+)$/gm, '<span style="color:#b89a4e">$1</span>')
+    .replace(/\*\*(.*?)\*\*/g, '<span style="color:#b89a4e">$1</span>')
+    .replace(/\n/g, "<br/>");
+}
+
 // ── HourglassAnim component ───────────────────────────────────────────────────
 function HourglassAnim() {
   const [frame, setFrame] = React.useState(0);
