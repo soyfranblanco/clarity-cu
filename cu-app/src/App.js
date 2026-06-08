@@ -10,7 +10,7 @@ const CU_LIGHT = "#F5F0E8";
 const NUNITO = "'Nunito', sans-serif";
 const GEORGIA = "Georgia, 'Times New Roman', serif";
 
-// ── CookUnity Leadership Principles (hardcoded context) ──────────────────────
+// ── CookUnity Leadership Principles ──────────────────────────────────────────
 const CU_PRINCIPLES = `COOKUNITY LEADERSHIP PRINCIPLES:
 
 1. Build authentic Relationships, drama-free.
@@ -47,20 +47,55 @@ Courage allows all other qualities to surface. We value those who challenge the 
 Small teams can do amazing work when empowered, agile, and committed. We trust teams to make decisions quickly, innovate boldly, and deliver exceptional results with autonomy and creativity.`;
 
 // ── System Prompt ────────────────────────────────────────────────────────────
-const SYSTEM_PROMPT_CU = `Sos un asesor de desarrollo profesional que combina Diseño Humano con coaching ejecutivo. Tu misión es ayudar a cada empleado de CookUnity a mejorar su desempeño de una forma que sea auténtica a cómo está diseñado/a.
+const SYSTEM_PROMPT_CU = `Sos un AI Coach personal de desarrollo profesional que combina Diseño Humano con coaching ejecutivo. Tu misión es ayudar a cada empleado de CookUnity a mejorar su desempeño de una forma auténtica a cómo está diseñado/a.
 
-Tenés acceso a tres fuentes de información sobre esta persona:
+A diferencia de otras IAs, no das respuestas genéricas. Todo lo que decís está basado en el diseño biológico único de esta persona. Si dos personas hacen la misma pregunta, van a recibir respuestas completamente distintas.
+
+Tenés acceso a tres fuentes de información:
 1. Su perfil de Diseño Humano — cómo procesa decisiones, gestiona energía, se relaciona y aprende
 2. Sus documentos — performance review, CliftonStrengths, feedback 360, u otros que haya subido
 3. Los Leadership Principles de CookUnity — los valores y comportamientos que la empresa espera
 
-VALIDACIÓN DE IDENTIDAD — MUY IMPORTANTE:
-Al inicio de cada conversación o cuando recibas documentos, verificá si el nombre del empleado registrado coincide con el nombre de la persona evaluada en los documentos. Si detectás una discrepancia (por ejemplo, el usuario se llama "Juan García" pero el documento es de "María López"), mencionalo de forma amable y directa: "Noto que tu nombre no coincide con el del documento. ¿Es tuyo?" No bloquees la conversación, pero sí dejá claro lo que observás.
+═══════════════════════════════════════
+ONBOARDING — MUY IMPORTANTE
+═══════════════════════════════════════
+Si recibís el mensaje "__ONBOARDING_START__", significa que es la primera vez que el usuario entra. Conducís el siguiente flujo. NO esperés que el usuario escriba primero — tomá la iniciativa.
+
+PASO 1 — Presentación y privacidad:
+Presentate brevemente. Explicá el diferencial: el filtro entre el motor de IA y el usuario es su perfil de Diseño Humano, por eso todas las respuestas son únicas para esa persona. Aclará que todo lo que se hable es privado — solo el usuario tiene acceso. Terminá preguntando: "¿De acuerdo con esto?"
+
+PASO 2 — Nivel de conocimiento (cuando el usuario responda al paso 1):
+Explicá brevemente qué es el filtro de Diseño Humano. Luego preguntá: "¿Conocés qué es o cómo funciona el Diseño Humano?" Según la respuesta:
+- Lo conoce → ir directo al paso 3
+- Algo pero no mucho → explicar en 2-3 líneas los conceptos más relevantes para el trabajo
+- No lo conoce → explicar brevemente qué es y por qué importa para su desarrollo profesional
+
+PASO 3 — Intención de uso:
+Preguntá de forma conversacional (sin bullets): "¿Por dónde querés empezar? ¿Tenés algún performance review que podamos analizar juntos, algún desafío concreto en el trabajo que quieras evaluar, o preferís explorar tu diseño para ir conociendo de a poco cómo funcionás?"
+
+PASO 4 — Momento de revelación:
+Antes de arrancar con el trabajo concreto, compartí UN insight específico basado en su diseño. Criterios: que sea contraintuitivo, que explique algo que probablemente siempre le costó, que conecte con el contexto laboral. Una sola idea, no un resumen completo del diseño.
+
+PASO 5 — Frecuencia de uso:
+Explicá cuándo puede consultarte: "Podés consultarme cuando tengas una duda puntual, antes de una reunión importante, cuando estés evaluando una decisión o cada vez que quieras revisar cómo estás avanzando. No hay una frecuencia correcta — lo que importa es que cuando lo necesites, estoy acá."
+
+PASO 6 — Transición:
+Cerrá el onboarding con algo que marque el inicio del trabajo real: "Ya sé cómo funcionás. Ahora arranquemos. ¿Por dónde querés empezar?"
+
+REGLAS DEL ONBOARDING:
+- Sé conversacional, no uses listas ni bullets durante el onboarding
+- Esperá la respuesta del usuario antes de avanzar al siguiente paso
+- Si el usuario se adelanta y hace una pregunta concreta, respondela y retomá el onboarding
+- El onboarding solo se hace una vez
+═══════════════════════════════════════
+
+VALIDACIÓN DE IDENTIDAD:
+Al recibir documentos, verificá si el nombre del empleado registrado coincide con el del documento. Si hay discrepancia, mencionalo amablemente. No bloquees la conversación.
 
 TU TRABAJO:
-- Cruzar estas tres fuentes para dar orientación concreta y personalizada
-- Ayudar al empleado a entender cómo mejorar sus puntos débiles de una forma que respete su diseño
-- Mostrar cómo sus fortalezas naturales se alinean con los principios de CookUnity
+- Cruzar diseño, documentos y principios de CookUnity para dar orientación concreta y personalizada
+- Ayudar a mejorar puntos débiles de una forma que respete el diseño de cada persona
+- Mostrar cómo las fortalezas naturales se alinean con los principios de CookUnity
 - Dar estrategias específicas, no genéricas
 - Nunca inventés nada — todo debe estar anclado en su diseño, sus documentos o los principios de CookUnity
 
@@ -71,12 +106,9 @@ TONO:
 - Respondé en el mismo idioma que escribe el empleado (español o inglés)
 - Frases cortas. Siempre cerrá con algo accionable.
 
-IDIOMA ESTRICTO: Si el empleado escribe en español, respondé 100% en español sin mezclar palabras en inglés. Si escribe en inglés, respondé en inglés. Nunca mezcles idiomas dentro de una misma respuesta.
+IDIOMA ESTRICTO: Si el empleado escribe en español, respondé 100% en español. Si escribe en inglés, respondé en inglés. Nunca mezcles idiomas.
 
-INTERFAZ DE LA HERRAMIENTA:
-Esta herramienta tiene una sección llamada "Mis documentos" (o "My documents" en inglés) accesible desde un botón en la barra superior del chat. Desde ahí el usuario puede subir documentos en PDF o texto, y activar o desactivar cuáles se inyectan en la conversación. Si alguien pregunta cómo subir un archivo, un documento, su performance review o cualquier otro material, siempre indicá que debe usar el botón "Mis documentos" en la barra superior. Nunca menciones clips, íconos de adjuntar, ni ninguna otra forma de subir archivos.`;
-
-
+INTERFAZ: Si alguien pregunta cómo subir un archivo, indicá que debe usar el botón "Mis documentos" en la barra superior.`;
 
 // ── PasswordField component ──────────────────────────────────────────────────
 function PasswordField({ placeholder, value, onChange, onEnter, style }) {
@@ -308,8 +340,6 @@ function Login({ go, setEmail: setParentEmail, setDynamicUser, lang, setLang }) 
 
   async function submit() {
     if (!email || !pass) { setErr(es ? "Completá todos los campos." : "Please fill all fields."); return; }
-
-    // ── Rate limiting ────────────────────────────────────────────────────────
     const RL_KEY = `cu_rl_${email.toLowerCase().trim()}`;
     const now = Date.now();
     const windowMs = 15 * 60 * 1000;
@@ -319,13 +349,9 @@ function Login({ go, setEmail: setParentEmail, setDynamicUser, lang, setLang }) 
     if (now - rl.first > windowMs) { rl = { count: 0, first: now }; }
     if (rl.count >= maxAttempts) {
       const waitMin = Math.ceil((windowMs - (now - rl.first)) / 60000);
-      setErr(es
-        ? `Demasiados intentos. Esperá ${waitMin} minuto${waitMin > 1 ? "s" : ""} e intentá de nuevo.`
-        : `Too many attempts. Wait ${waitMin} minute${waitMin > 1 ? "s" : ""} and try again.`);
+      setErr(es ? `Demasiados intentos. Esperá ${waitMin} minuto${waitMin > 1 ? "s" : ""} e intentá de nuevo.` : `Too many attempts. Wait ${waitMin} minute${waitMin > 1 ? "s" : ""} and try again.`);
       return;
     }
-    // ────────────────────────────────────────────────────────────────────────
-
     setLoading(true); setErr("");
     try {
       const loginRes = await fetch("/api/update-usuario", {
@@ -342,7 +368,6 @@ function Login({ go, setEmail: setParentEmail, setDynamicUser, lang, setLang }) 
         try { localStorage.setItem(RL_KEY, JSON.stringify({ count: rl.count + 1, first: rl.first })); } catch {}
         setErr(es ? "Contraseña incorrecta." : "Incorrect password."); setLoading(false); return;
       }
-      // Login exitoso — limpiar contador
       try { localStorage.removeItem(RL_KEY); } catch {}
       setParentEmail(user.email);
       setDynamicUser(user);
@@ -508,13 +533,9 @@ function Documentos({ go, userEmail, isModal = false, lang, setLang }) {
   }
 
   async function parsePDF(file) {
-    if (file.size > 5 * 1024 * 1024) {
-      setErr(es ? "El PDF supera los 5MB." : "PDF exceeds 5MB."); return;
-    }
+    if (file.size > 5 * 1024 * 1024) { setErr(es ? "El PDF supera los 5MB." : "PDF exceeds 5MB."); return; }
     setUploading(true); setErr(""); setLoadingMsg(0);
-    const msgInterval = setInterval(() => {
-      setLoadingMsg(prev => prev < 4 ? prev + 1 : prev);
-    }, 7000);
+    const msgInterval = setInterval(() => { setLoadingMsg(prev => prev < 4 ? prev + 1 : prev); }, 7000);
     try {
       const base64 = await new Promise((res, rej) => {
         const r = new FileReader();
@@ -526,13 +547,10 @@ function Documentos({ go, userEmail, isModal = false, lang, setLang }) {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514", max_tokens: 4000,
-          messages: [{
-            role: "user",
-            content: [
-              { type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } },
-              { type: "text", text: "Extract all the text content from this document. Return only the extracted text, preserving structure with line breaks. No commentary." }
-            ]
-          }]
+          messages: [{ role: "user", content: [
+            { type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } },
+            { type: "text", text: "Extract all the text content from this document. Return only the extracted text, preserving structure with line breaks. No commentary." }
+          ]}]
         })
       });
       const data = await response.json();
@@ -540,7 +558,7 @@ function Documentos({ go, userEmail, isModal = false, lang, setLang }) {
       if (!extracted) { setErr(es ? "No se pudo extraer texto del PDF." : "Could not extract text from PDF."); setUploading(false); return; }
       setTexto(extracted);
       if (!nombre) setNombre(file.name.replace(".pdf", ""));
-    } catch (e) { setErr(es ? "Error al leer el PDF." : "Error reading PDF."); }
+    } catch { setErr(es ? "Error al leer el PDF." : "Error reading PDF."); }
     clearInterval(msgInterval);
     setUploading(false);
   }
@@ -552,10 +570,7 @@ function Documentos({ go, userEmail, isModal = false, lang, setLang }) {
     try {
       await fetch("/api/update-usuario", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "insert-cu-documento",
-          fields: { usuario_email: userEmail, nombre: nombreFinal, contenido: texto.trim(), activo: true }
-        })
+        body: JSON.stringify({ action: "insert-cu-documento", fields: { usuario_email: userEmail, nombre: nombreFinal, contenido: texto.trim(), activo: true } })
       });
       setTexto(""); setNombre(""); setShowForm(false);
       await cargarDocs();
@@ -587,9 +602,7 @@ function Documentos({ go, userEmail, isModal = false, lang, setLang }) {
     <div style={{ padding: isModal ? "1.5rem 2rem 2rem" : "0" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <div>
-          <div style={{ fontFamily: GEORGIA, fontSize: "1.3rem", color: "#f0ebe0" }}>
-            {es ? "Mis documentos" : "My documents"}
-          </div>
+          <div style={{ fontFamily: GEORGIA, fontSize: "1.3rem", color: "#f0ebe0" }}>{es ? "Mis documentos" : "My documents"}</div>
           <div style={{ color: "rgba(240,235,224,.4)", fontSize: ".75rem", fontFamily: NUNITO, marginTop: ".2rem" }}>
             {es ? "Se inyectan en el chat cuando están activos." : "Injected into the chat when active."}
           </div>
@@ -602,12 +615,7 @@ function Documentos({ go, userEmail, isModal = false, lang, setLang }) {
 
       {showForm && (
         <div style={{ border: "1px solid rgba(184,154,78,.2)", borderRadius: 12, padding: "1.5rem", marginBottom: "1.5rem", background: "rgba(255,255,255,.02)" }}>
-          <input
-            placeholder={es ? "Nombre del documento (ej: Performance Review 2025)" : "Document name (e.g. Performance Review 2025)"}
-            value={nombre}
-            onChange={e => setNombre(e.target.value)}
-            style={inp}
-          />
+          <input placeholder={es ? "Nombre del documento (ej: Performance Review 2025)" : "Document name (e.g. Performance Review 2025)"} value={nombre} onChange={e => setNombre(e.target.value)} style={inp} />
           <div style={{ display: "flex", gap: ".5rem", marginBottom: "1rem" }}>
             {["pdf", "text"].map(m => (
               <button key={m} onClick={() => setModo(m)}
@@ -616,41 +624,22 @@ function Documentos({ go, userEmail, isModal = false, lang, setLang }) {
               </button>
             ))}
           </div>
-
           {modo === "pdf" ? (
-            <div>
-              <label style={{ display: "block", border: "2px dashed rgba(184,154,78,.3)", borderRadius: 12, padding: "1.5rem", textAlign: "center", cursor: "pointer", color: "rgba(240,235,224,.45)", fontFamily: NUNITO, fontSize: ".85rem", lineHeight: 1.6 }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = CU_ORANGE}
-                onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(184,154,78,.3)"}>
-                <input type="file" accept=".pdf" style={{ display: "none" }} onChange={e => e.target.files[0] && parsePDF(e.target.files[0])} />
-                {uploading ? (
-                  <div>
-                    <HourglassAnim />
-                    <div>{es ? PDF_MSGS_ES[loadingMsg] : PDF_MSGS_EN[loadingMsg]}</div>
-                    <div style={{ fontSize: ".7rem", marginTop: ".5rem", opacity: .5 }}>{es ? "Hasta 30 segundos" : "Up to 30 seconds"}</div>
-                  </div>
-                ) : (
-                  <>
-                    <div style={{ fontSize: "1.5rem", marginBottom: ".5rem" }}>📄</div>
-                    {texto
-                      ? (es ? "✓ PDF procesado. Podés cambiar el nombre y guardar." : "✓ PDF processed. You can rename and save.")
-                      : (es ? "Hacé clic para seleccionar tu PDF" : "Click to select your PDF")}
-                    <div style={{ fontSize: ".7rem", marginTop: ".3rem", opacity: .6 }}>{es ? "Solo PDF · Máx. 5MB" : "PDF only · Max. 5MB"}</div>
-                  </>
-                )}
-              </label>
-            </div>
+            <label style={{ display: "block", border: "2px dashed rgba(184,154,78,.3)", borderRadius: 12, padding: "1.5rem", textAlign: "center", cursor: "pointer", color: "rgba(240,235,224,.45)", fontFamily: NUNITO, fontSize: ".85rem", lineHeight: 1.6 }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = CU_ORANGE}
+              onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(184,154,78,.3)"}>
+              <input type="file" accept=".pdf" style={{ display: "none" }} onChange={e => e.target.files[0] && parsePDF(e.target.files[0])} />
+              {uploading ? (
+                <div><HourglassAnim /><div>{es ? PDF_MSGS_ES[loadingMsg] : PDF_MSGS_EN[loadingMsg]}</div><div style={{ fontSize: ".7rem", marginTop: ".5rem", opacity: .5 }}>{es ? "Hasta 30 segundos" : "Up to 30 seconds"}</div></div>
+              ) : (
+                <><div style={{ fontSize: "1.5rem", marginBottom: ".5rem" }}>📄</div>{texto ? (es ? "✓ PDF procesado. Podés cambiar el nombre y guardar." : "✓ PDF processed. You can rename and save.") : (es ? "Hacé clic para seleccionar tu PDF" : "Click to select your PDF")}<div style={{ fontSize: ".7rem", marginTop: ".3rem", opacity: .6 }}>{es ? "Solo PDF · Máx. 5MB" : "PDF only · Max. 5MB"}</div></>
+              )}
+            </label>
           ) : (
-            <textarea
-              value={texto}
-              onChange={e => setTexto(e.target.value)}
-              placeholder={es ? "Pegá el texto acá..." : "Paste your text here..."}
-              style={{ width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(184,154,78,.2)", borderRadius: 12, color: "#f0ebe0", fontFamily: NUNITO, fontSize: ".85rem", padding: "1rem", outline: "none", resize: "vertical", lineHeight: 1.6, minHeight: 150, boxSizing: "border-box" }}
-            />
+            <textarea value={texto} onChange={e => setTexto(e.target.value)} placeholder={es ? "Pegá el texto acá..." : "Paste your text here..."}
+              style={{ width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(184,154,78,.2)", borderRadius: 12, color: "#f0ebe0", fontFamily: NUNITO, fontSize: ".85rem", padding: "1rem", outline: "none", resize: "vertical", lineHeight: 1.6, minHeight: 150, boxSizing: "border-box" }} />
           )}
-
           {err && <div style={{ color: "#e07070", fontSize: ".78rem", margin: ".8rem 0", fontFamily: NUNITO }}>{err}</div>}
-
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1rem" }}>
             <button onClick={guardar} disabled={uploading || !texto.trim()}
               style={{ background: CU_ORANGE, color: CU_DARK, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".6rem", letterSpacing: ".25em", padding: ".75em 1.8em", cursor: uploading || !texto.trim() ? "not-allowed" : "pointer", textTransform: "uppercase", fontWeight: 700, opacity: uploading || !texto.trim() ? 0.5 : 1 }}>
@@ -661,24 +650,16 @@ function Documentos({ go, userEmail, isModal = false, lang, setLang }) {
       )}
 
       {loading ? (
-        <div style={{ color: "rgba(240,235,224,.3)", fontFamily: NUNITO, fontSize: ".82rem", textAlign: "center", padding: "2rem" }}>
-          {es ? "Cargando documentos..." : "Loading documents..."}
-        </div>
+        <div style={{ color: "rgba(240,235,224,.3)", fontFamily: NUNITO, fontSize: ".82rem", textAlign: "center", padding: "2rem" }}>{es ? "Cargando documentos..." : "Loading documents..."}</div>
       ) : docs.length === 0 && !showForm ? (
-        <div style={{ color: "rgba(240,235,224,.3)", fontFamily: NUNITO, fontSize: ".82rem", textAlign: "center", padding: "2rem", border: "1px dashed rgba(184,154,78,.15)", borderRadius: 12 }}>
-          {es ? "Todavía no subiste ningún documento." : "You haven't uploaded any documents yet."}
-        </div>
+        <div style={{ color: "rgba(240,235,224,.3)", fontFamily: NUNITO, fontSize: ".82rem", textAlign: "center", padding: "2rem", border: "1px dashed rgba(184,154,78,.15)", borderRadius: 12 }}>{es ? "Todavía no subiste ningún documento." : "You haven't uploaded any documents yet."}</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: ".6rem" }}>
           {docs.map(doc => (
             <div key={doc.id} style={{ display: "flex", alignItems: "center", gap: "1rem", padding: ".9rem 1.2rem", background: doc.activo ? "rgba(184,154,78,.06)" : "rgba(255,255,255,.02)", border: `1px solid ${doc.activo ? "rgba(184,154,78,.25)" : "rgba(255,255,255,.06)"}`, borderRadius: 10 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: NUNITO, fontSize: ".85rem", color: doc.activo ? "#f0ebe0" : "rgba(240,235,224,.35)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {doc.nombre}
-                </div>
-                <div style={{ fontFamily: "monospace", fontSize: ".42rem", letterSpacing: ".1em", color: doc.activo ? CU_ORANGE : "rgba(240,235,224,.2)", marginTop: ".2rem", textTransform: "uppercase" }}>
-                  {doc.activo ? (es ? "Activo" : "Active") : (es ? "Inactivo" : "Inactive")}
-                </div>
+                <div style={{ fontFamily: NUNITO, fontSize: ".85rem", color: doc.activo ? "#f0ebe0" : "rgba(240,235,224,.35)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{doc.nombre}</div>
+                <div style={{ fontFamily: "monospace", fontSize: ".42rem", letterSpacing: ".1em", color: doc.activo ? CU_ORANGE : "rgba(240,235,224,.2)", marginTop: ".2rem", textTransform: "uppercase" }}>{doc.activo ? (es ? "Activo" : "Active") : (es ? "Inactivo" : "Inactive")}</div>
               </div>
               <button onClick={() => toggleActivo(doc)}
                 style={{ background: doc.activo ? "rgba(184,154,78,.15)" : "rgba(255,255,255,.04)", border: `1px solid ${doc.activo ? CU_ORANGE : "rgba(255,255,255,.1)"}`, borderRadius: 20, color: doc.activo ? CU_ORANGE : "rgba(240,235,224,.3)", fontFamily: "monospace", fontSize: ".42rem", letterSpacing: ".12em", padding: ".35em .8em", cursor: "pointer", textTransform: "uppercase", flexShrink: 0 }}>
@@ -687,9 +668,7 @@ function Documentos({ go, userEmail, isModal = false, lang, setLang }) {
               <button onClick={() => eliminar(doc.id)}
                 style={{ background: "none", border: "none", color: "rgba(240,235,224,.2)", cursor: "pointer", fontSize: "1rem", padding: "0 .2rem", flexShrink: 0, lineHeight: 1 }}
                 onMouseEnter={e => e.currentTarget.style.color = "#e07070"}
-                onMouseLeave={e => e.currentTarget.style.color = "rgba(240,235,224,.2)"}>
-                ×
-              </button>
+                onMouseLeave={e => e.currentTarget.style.color = "rgba(240,235,224,.2)"}>×</button>
             </div>
           ))}
         </div>
@@ -710,22 +689,15 @@ function Documentos({ go, userEmail, isModal = false, lang, setLang }) {
         ))}
       </div>
       <div style={{ width: "100%", maxWidth: 560 }}>
-        <div style={{ fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".3em", color: CU_ORANGE, marginBottom: ".5rem", textTransform: "uppercase" }}>
-          {es ? "Paso 2 de 2" : "Step 2 of 2"}
-        </div>
+        <div style={{ fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".3em", color: CU_ORANGE, marginBottom: ".5rem", textTransform: "uppercase" }}>{es ? "Paso 2 de 2" : "Step 2 of 2"}</div>
         <div style={{ border: "1px solid rgba(184,154,78,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)" }}>
-          <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".4rem" }}>
-            {es ? "Tus documentos" : "Your documents"}
-          </div>
+          <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".4rem" }}>{es ? "Tus documentos" : "Your documents"}</div>
           <div style={{ color: "rgba(240,235,224,.45)", fontSize: ".82rem", marginBottom: "1.8rem", fontFamily: NUNITO, lineHeight: 1.6 }}>
-            {es
-              ? "Subí tu performance review o cualquier otro documento que quieras analizar con la herramienta."
-              : "Upload your performance review or any other document you want to analyze with the tool."}
+            {es ? "Subí tu performance review o cualquier otro documento que quieras analizar con la herramienta." : "Upload your performance review or any other document you want to analyze with the tool."}
           </div>
           <Documentos go={go} userEmail={userEmail} isModal={true} lang={lang} setLang={setLang} />
           <div style={{ display: "flex", justifyContent: "flex-start", marginTop: "1.2rem" }}>
-            <button onClick={() => go("chat")}
-              style={{ background: "none", border: "none", color: "rgba(240,235,224,.3)", cursor: "pointer", fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".15em" }}>
+            <button onClick={() => go("chat")} style={{ background: "none", border: "none", color: "rgba(240,235,224,.3)", cursor: "pointer", fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".15em" }}>
               {es ? "Saltar por ahora →" : "Skip for now →"}
             </button>
           </div>
@@ -746,6 +718,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
   const [showDocs, setShowDocs] = useState(false);
   const [docsActivos, setDocsActivos] = useState([]);
   const [darkMode, setDarkMode] = useState(true);
+  const [onboardingDone, setOnboardingDone] = useState(false);
   const chatRef = useRef(null);
   const lastUserRef = useRef(null);
   const shouldScrollRef = useRef(false);
@@ -767,6 +740,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
         if (Array.isArray(convData) && convData[0]?.mensajes?.length) {
           setMsgs(convData[0].mensajes);
           setConvId(convData[0].id);
+          setOnboardingDone(true);
         }
         const docsRes = await fetch("/api/update-usuario", {
           method: "POST", headers: { "Content-Type": "application/json" },
@@ -779,28 +753,59 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
     load();
   }, [userEmail]);
 
+  // Disparar onboarding automáticamente si no hay mensajes previos
+  useEffect(() => {
+    if (!onboardingDone && msgs.length === 0 && !loading && user?.diseno) {
+      const timer = setTimeout(() => { triggerOnboarding(); }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [user, onboardingDone]);
+
   useEffect(() => {
     if (shouldScrollRef.current && lastUserRef.current) {
       lastUserRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [msgs, loading]);
 
-  function buildSystemPrompt() {
+  function buildSystemPrompt(isOnboarding = false) {
     const d = user?.diseno;
     let sys = SYSTEM_PROMPT_CU + "\n\n";
+    if (isOnboarding) {
+      sys += "ESTADO: Primera conversación. El usuario recién entra por primera vez. Conducí el onboarding completo empezando por el Paso 1.\n\n";
+    }
     if (d) {
       sys += `DISEÑO HUMANO DE ${user.nombre} ${user.apellido}:\n`;
       sys += `Tipo: ${d.tipo}\nAutoridad: ${d.autoridad}\nPerfil: ${d.perfil}\nEstrategia: ${d.estrategia}\nFirma: ${d.firma}\nNo-self: ${d.no_self}\nEntorno: ${d.entorno}\n\n`;
     }
     if (docsActivos.length > 0) {
       sys += `DOCUMENTOS DEL USUARIO:\n`;
-      docsActivos.forEach(doc => {
-        sys += `\n--- ${doc.nombre} ---\n${doc.contenido}\n`;
-      });
+      docsActivos.forEach(doc => { sys += `\n--- ${doc.nombre} ---\n${doc.contenido}\n`; });
       sys += "\n";
     }
     sys += CU_PRINCIPLES;
     return sys;
+  }
+
+  async function triggerOnboarding() {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const r = await fetch("/api/chat", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514", max_tokens: 1000,
+          system: buildSystemPrompt(true),
+          messages: [{ role: "user", content: "__ONBOARDING_START__" }]
+        }),
+      });
+      const data = await r.json();
+      const respuesta = data?.content?.[0]?.text || "";
+      if (respuesta) {
+        setMsgs([{ role: "assistant", content: respuesta }]);
+      }
+    } catch {}
+    setLoading(false);
+    setOnboardingDone(true);
   }
 
   async function recargarDocs() {
@@ -845,7 +850,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
     try {
       const r = await fetch("/api/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, system: buildSystemPrompt(), messages: next }),
+        body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, system: buildSystemPrompt(false), messages: next }),
       });
       const data = await r.json();
       const final = [...next, { role: "assistant", content: data?.content?.[0]?.text || "Error." }];
@@ -856,8 +861,6 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
     setLoading(false);
     shouldScrollRef.current = false;
   }
-
-  const hasDH = !!user?.diseno;
 
   return (
     <div style={{ height: "100vh", background: bg, display: "flex", flexDirection: "column", transition: "background .3s", overflow: "hidden" }}>
@@ -875,9 +878,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: ".9rem 2rem", borderBottom: `1px solid rgba(184,154,78,.12)`, background: panelBg, position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <div style={{ fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".3em", color: CU_ORANGE, fontWeight: 700 }}>COOK × UNITY</div>
-          <div style={{ fontFamily: GEORGIA, fontSize: ".85rem", color: dim }}>
-            {es ? `Hola, ${user?.nombre || ""}` : `Hi, ${user?.nombre || ""}`}
-          </div>
+          <div style={{ fontFamily: GEORGIA, fontSize: ".85rem", color: dim }}>{es ? `Hola, ${user?.nombre || ""}` : `Hi, ${user?.nombre || ""}`}</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: ".8rem" }}>
           <button onClick={() => setShowDocs(true)}
@@ -890,8 +891,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
               {l}
             </button>
           ))}
-          <button onClick={() => setDarkMode(v => !v)}
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 4, opacity: .8, display: "flex", alignItems: "center" }}>
+          <button onClick={() => setDarkMode(v => !v)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, opacity: .8, display: "flex", alignItems: "center" }}>
             {darkMode
               ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={CU_ORANGE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
               : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={CU_ORANGE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -908,8 +908,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "1rem" }}>
           <div style={{ background: CU_DARK, border: `1px solid rgba(184,154,78,.25)`, borderRadius: 16, width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto" }}>
             <div style={{ display: "flex", justifyContent: "flex-end", padding: "1rem 1.5rem 0" }}>
-              <button onClick={() => { setShowDocs(false); recargarDocs(); }}
-                style={{ background: "none", border: "none", color: "rgba(240,235,224,.4)", cursor: "pointer", fontSize: "1.2rem" }}>×</button>
+              <button onClick={() => { setShowDocs(false); recargarDocs(); }} style={{ background: "none", border: "none", color: "rgba(240,235,224,.4)", cursor: "pointer", fontSize: "1.2rem" }}>×</button>
             </div>
             <Documentos go={() => {}} userEmail={userEmail} isModal={true} lang={lang} setLang={setLang} />
           </div>
@@ -919,36 +918,6 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
       {/* Messages */}
       <div className="cu-scroll" ref={chatRef} style={{ flex: 1, overflowY: "auto", padding: "2rem 0", display: "flex", flexDirection: "column" }}>
         <div style={{ flex: 1, maxWidth: 900, margin: "0 auto", width: "100%", padding: "0 clamp(60px, 10vw, 150px)", display: "flex", flexDirection: "column", gap: "1.8rem" }}>
-
-          {msgs.length === 0 && (
-            <div style={{ textAlign: "center", padding: "3rem 0" }}>
-              <div style={{ fontFamily: GEORGIA, fontSize: "1.3rem", color: txt, marginBottom: ".8rem" }}>
-                {es ? `Hola, ${user?.nombre}.` : `Hello, ${user?.nombre}.`}
-              </div>
-              <div style={{ color: dim, fontSize: ".88rem", fontFamily: NUNITO, maxWidth: 500, margin: "0 auto", lineHeight: 1.7 }}>
-                {es
-                  ? "Estoy acá para ayudarte a crecer dentro de CookUnity de una forma que sea auténtica a tu diseño. Podés preguntarme sobre tus documentos, cómo mejorar áreas específicas, o cómo tus fortalezas se alinean con los principios de la empresa."
-                  : "I'm here to help you grow within CookUnity in a way that's authentic to your design. You can ask me about your documents, how to improve specific areas, or how your strengths align with the company's principles."}
-              </div>
-              {hasDH && (
-                <div style={{ display: "flex", gap: ".5rem", flexWrap: "wrap", justifyContent: "center", marginTop: "1.5rem" }}>
-                  {[
-                    es ? "¿Cuáles son mis puntos más fuertes según mi diseño?" : "What are my strongest points according to my design?",
-                    es ? "¿Cómo puedo mejorar las áreas de desarrollo de mi review?" : "How can I improve my development areas from my review?",
-                    es ? "¿Cómo se alinea mi diseño con los Leadership Principles?" : "How does my design align with the Leadership Principles?",
-                  ].map((q, i) => (
-                    <button key={i} onClick={() => { setInput(q); }}
-                      style={{ background: "rgba(184,154,78,.08)", border: `1px solid rgba(184,154,78,.2)`, borderRadius: 20, color: dim, fontFamily: NUNITO, fontSize: ".78rem", padding: ".5em 1em", cursor: "pointer", transition: "all .2s" }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = CU_ORANGE; e.currentTarget.style.color = CU_ORANGE; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(184,154,78,.2)"; e.currentTarget.style.color = dim; }}>
-                      {q}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
           {msgs.map((m, i) => (
             <div key={i} ref={m.role === "user" ? lastUserRef : null}
               style={{ maxWidth: "85%", alignSelf: m.role === "user" ? "flex-end" : "flex-start" }}>
@@ -962,7 +931,6 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
               )}
             </div>
           ))}
-
           {loading && (
             <div style={{ display: "flex", gap: 5, padding: ".5rem 0" }}>
               {[0, 1, 2].map(i => (
@@ -980,7 +948,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-            placeholder={es ? `Preguntá sobre tu desempeño, ${user?.nombre || ""}...` : `Ask about your performance, ${user?.nombre || ""}...`}
+            placeholder={es ? `Respondé o preguntá lo que necesites...` : `Reply or ask anything...`}
             rows={1}
             style={{ flex: 1, background: "transparent", border: "none", borderBottom: `1px solid rgba(184,154,78,.25)`, color: txt, fontFamily: GEORGIA, fontSize: ".95rem", padding: ".6rem 0", outline: "none", resize: "none", lineHeight: 1.5 }}
           />
@@ -998,7 +966,7 @@ function Chat({ go, userEmail, dynamicUser, lang, setLang }) {
   );
 }
 
-// ── Recover Password screen ──────────────────────────────────────────────────
+// ── Recover ──────────────────────────────────────────────────────────────────
 function Recover({ go, lang, setLang }) {
   const es = lang === "es";
   const [email, setEmail] = useState("");
@@ -1016,9 +984,7 @@ function Recover({ go, lang, setLang }) {
         body: JSON.stringify({ action: "get-cu-usuario", email: email.toLowerCase().trim() })
       });
       const data = await r.json();
-      if (!Array.isArray(data) || data.length === 0) {
-        setErr(es ? "Email no encontrado." : "Email not found."); setLoading(false); return;
-      }
+      if (!Array.isArray(data) || data.length === 0) { setErr(es ? "Email no encontrado." : "Email not found."); setLoading(false); return; }
       const user = data[0];
       await fetch("/api/send-verification", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -1031,28 +997,16 @@ function Recover({ go, lang, setLang }) {
 
   return (
     <div style={{ minHeight: "100vh", background: CU_DARK, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
-      <div style={{ position: "absolute", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".4rem" }}>
-        {["es", "en"].map(l => (
-          <button key={l} onClick={() => setLang(l)}
-            style={{ background: lang === l ? "rgba(184,154,78,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
-            {l}
-          </button>
-        ))}
-      </div>
       <div style={{ width: "100%", maxWidth: 420 }}>
         <button onClick={() => go("login")} style={{ background: "none", border: "none", color: "rgba(255,255,255,.3)", cursor: "pointer", fontFamily: "monospace", fontSize: ".55rem", marginBottom: "2rem", letterSpacing: ".15em" }}>← {es ? "Volver" : "Back"}</button>
         <div style={{ border: "1px solid rgba(184,154,78,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)", textAlign: sent ? "center" : "left" }}>
           {sent ? <>
             <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>📬</div>
             <div style={{ fontFamily: GEORGIA, fontSize: "1.3rem", color: "#fff", marginBottom: ".8rem" }}>{es ? "Revisá tu email" : "Check your email"}</div>
-            <div style={{ color: "rgba(240,235,224,.45)", fontSize: ".82rem", fontFamily: NUNITO, lineHeight: 1.6 }}>
-              {es ? "Te enviamos un link para restablecer tu contraseña." : "We sent you a link to reset your password."}
-            </div>
+            <div style={{ color: "rgba(240,235,224,.45)", fontSize: ".82rem", fontFamily: NUNITO, lineHeight: 1.6 }}>{es ? "Te enviamos un link para restablecer tu contraseña." : "We sent you a link to reset your password."}</div>
           </> : <>
             <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".4rem" }}>{es ? "Recuperar contraseña" : "Reset password"}</div>
-            <div style={{ color: "rgba(240,235,224,.45)", fontSize: ".82rem", marginBottom: "1.5rem", fontFamily: NUNITO }}>
-              {es ? "Te enviamos un link a tu email." : "We'll send a link to your email."}
-            </div>
+            <div style={{ color: "rgba(240,235,224,.45)", fontSize: ".82rem", marginBottom: "1.5rem", fontFamily: NUNITO }}>{es ? "Te enviamos un link a tu email." : "We'll send a link to your email."}</div>
             <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && enviar()} style={inp} />
             {err && <div style={{ color: "#e07070", fontSize: ".78rem", marginBottom: ".8rem" }}>{err}</div>}
             <button onClick={enviar} disabled={loading}
@@ -1066,32 +1020,18 @@ function Recover({ go, lang, setLang }) {
   );
 }
 
-// ── Pending verification screen ──────────────────────────────────────────────
+// ── Pending ──────────────────────────────────────────────────────────────────
 function Pending({ go, email, lang, setLang }) {
   const es = lang === "es";
   return (
     <div style={{ minHeight: "100vh", background: CU_DARK, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
-      <div style={{ position: "absolute", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".4rem" }}>
-        {["es", "en"].map(l => (
-          <button key={l} onClick={() => setLang(l)}
-            style={{ background: lang === l ? "rgba(184,154,78,.15)" : "transparent", color: lang === l ? CU_ORANGE : "rgba(255,255,255,.3)", border: `1px solid ${lang === l ? CU_ORANGE : "rgba(255,255,255,.15)"}`, borderRadius: 20, fontFamily: "monospace", fontSize: ".5rem", letterSpacing: ".1em", padding: ".25em .6em", cursor: "pointer", textTransform: "uppercase" }}>
-            {l}
-          </button>
-        ))}
-      </div>
       <div style={{ width: "100%", maxWidth: 420, textAlign: "center" }}>
         <div style={{ fontSize: "2.5rem", marginBottom: "1.5rem" }}>📬</div>
-        <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".8rem" }}>
-          {es ? "Revisá tu email" : "Check your email"}
-        </div>
+        <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".8rem" }}>{es ? "Revisá tu email" : "Check your email"}</div>
         <div style={{ color: "rgba(240,235,224,.45)", fontSize: ".85rem", fontFamily: NUNITO, lineHeight: 1.7, marginBottom: "2rem" }}>
-          {es
-            ? `Te enviamos un link de verificación a ${email}. Hacé clic en el link para activar tu cuenta y continuar.`
-            : `We sent a verification link to ${email}. Click the link to activate your account and continue.`}
+          {es ? `Te enviamos un link de verificación a ${email}. Hacé clic en el link para activar tu cuenta y continuar.` : `We sent a verification link to ${email}. Click the link to activate your account and continue.`}
         </div>
-        <div style={{ color: "rgba(240,235,224,.3)", fontSize: ".75rem", fontFamily: NUNITO, marginBottom: "1.5rem" }}>
-          {es ? "¿No lo encontrás? Revisá la carpeta de spam." : "Can't find it? Check your spam folder."}
-        </div>
+        <div style={{ color: "rgba(240,235,224,.3)", fontSize: ".75rem", fontFamily: NUNITO, marginBottom: "1.5rem" }}>{es ? "¿No lo encontrás? Revisá la carpeta de spam." : "Can't find it? Check your spam folder."}</div>
         <div style={{ color: "rgba(240,235,224,.25)", fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".15em", marginTop: "1rem" }}>
           {es ? "DEBÉS VERIFICAR TU EMAIL PARA CONTINUAR" : "YOU MUST VERIFY YOUR EMAIL TO CONTINUE"}
         </div>
@@ -1100,7 +1040,7 @@ function Pending({ go, email, lang, setLang }) {
   );
 }
 
-// ── Reset Password screen ────────────────────────────────────────────────────
+// ── Reset ────────────────────────────────────────────────────────────────────
 function Reset({ go, email, lang, setLang }) {
   const es = lang === "es";
   const [pass, setPass] = useState("");
@@ -1131,17 +1071,13 @@ function Reset({ go, email, lang, setLang }) {
         <div style={{ border: "1px solid rgba(184,154,78,.2)", borderRadius: 16, padding: "2.5rem", background: "rgba(255,255,255,.02)", textAlign: done ? "center" : "left" }}>
           {done ? <>
             <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>✅</div>
-            <div style={{ fontFamily: GEORGIA, fontSize: "1.3rem", color: "#fff", marginBottom: ".8rem" }}>
-              {es ? "Contraseña actualizada" : "Password updated"}
-            </div>
+            <div style={{ fontFamily: GEORGIA, fontSize: "1.3rem", color: "#fff", marginBottom: ".8rem" }}>{es ? "Contraseña actualizada" : "Password updated"}</div>
             <button onClick={() => go("login")}
               style={{ background: CU_ORANGE, color: CU_DARK, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".6rem", letterSpacing: ".25em", padding: ".75em 1.8em", cursor: "pointer", textTransform: "uppercase", fontWeight: 700, marginTop: "1rem" }}>
               {es ? "Ingresar" : "Sign in"}
             </button>
           </> : <>
-            <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".4rem" }}>
-              {es ? "Nueva contraseña" : "New password"}
-            </div>
+            <div style={{ fontFamily: GEORGIA, fontSize: "1.5rem", color: "#fff", marginBottom: ".4rem" }}>{es ? "Nueva contraseña" : "New password"}</div>
             <div style={{ color: "rgba(240,235,224,.45)", fontSize: ".82rem", marginBottom: "1.5rem", fontFamily: NUNITO }}>{email}</div>
             <PasswordField placeholder={es ? "Nueva contraseña" : "New password"} value={pass} onChange={setPass} style={inp} />
             <PasswordField placeholder={es ? "Repetir contraseña" : "Confirm password"} value={pass2} onChange={setPass2} onEnter={guardar} style={inp} />
