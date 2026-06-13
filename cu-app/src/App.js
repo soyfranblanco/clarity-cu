@@ -243,11 +243,45 @@ function Eye({ value, onChange, placeholder = "Contraseña", onKeyDown }) {
   );
 }
 
+// ─── LANG TOGGLE (compartido) ─────────────────────────────────────────────────
+function LangToggle({ lang, setLang }) {
+  return (
+    <div style={{ position: "fixed", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".3rem", zIndex: 150 }}>
+      {["es", "en"].map((l) => (
+        <button key={l} onClick={() => setLang(l)}
+          style={{ background: lang === l ? "rgba(184,154,78,.15)" : "none", border: "1px solid rgba(184,154,78,.25)", color: lang === l ? C.gold : C.dim, fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".2em", padding: ".3em .7em", cursor: "pointer", textTransform: "uppercase" }}>
+          {l}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── SELECT estilizado (sin azul nativo) ──────────────────────────────────────
+const selStyle = {
+  width: "100%",
+  background: "#111",
+  border: "none",
+  borderBottom: "1px solid rgba(184,154,78,.3)",
+  color: "#f0ebe0",
+  fontFamily: NUNITO,
+  fontSize: ".95rem",
+  padding: ".6rem 0",
+  outline: "none",
+  marginBottom: "1.3rem",
+  display: "block",
+  boxSizing: "border-box",
+  WebkitAppearance: "none",
+  appearance: "none",
+  cursor: "pointer",
+};
+
 // ─── WELCOME ──────────────────────────────────────────────────────────────────
-function Welcome({ go }) {
+function Welcome({ go, lang, setLang }) {
   return (
     <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", fontFamily: NUNITO, color: C.txt }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600&display=swap');`}</style>
+      <LangToggle lang={lang} setLang={setLang} />
       <div style={logo}>SIMPLE <strong>CLARITY</strong></div>
       <div style={{ textAlign: "center", maxWidth: 580 }}>
         <div style={{ fontSize: "clamp(1.6rem,4vw,2.4rem)", fontWeight: 300, lineHeight: 1.3, marginBottom: "2.5rem", fontFamily: GEORGIA }}>
@@ -279,22 +313,76 @@ function Welcome({ go }) {
   );
 }
 
-// ─── REGISTER — STEP 1: datos básicos ────────────────────────────────────────
-function Register({ go, setSessionData }) {
-  const [step, setStep] = useState(1); // 1: cuenta, 2: empresa, 3: diseño
+// ─── CITY INPUT (idéntico a INSIDE) ──────────────────────────────────────────
+function CityInput({ value, onChange, placeholder }) {
+  const [sugerencias, setSugerencias] = useState([]);
+  const [show, setShow] = useState(false);
+  const timer = useRef(null);
+
+  async function buscar(q) {
+    if (q.length < 3) { setSugerencias([]); return; }
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&featuretype=city&accept-language=es`);
+      const data = await r.json();
+      setSugerencias(data.map((d) => d.display_name));
+    } catch { setSugerencias([]); }
+  }
+
+  function handleChange(e) {
+    onChange(e.target.value);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => buscar(e.target.value), 400);
+    setShow(true);
+  }
+
+  return (
+    <div style={{ position: "relative", marginBottom: "1.3rem" }}>
+      <input style={{ ...inp, marginBottom: 0 }} placeholder={placeholder} value={value} onChange={handleChange}
+        onBlur={() => setTimeout(() => setShow(false), 200)}
+        onFocus={() => sugerencias.length > 0 && setShow(true)} />
+      {show && sugerencias.length > 0 && (
+        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#1a1a1a", border: "1px solid rgba(184,154,78,.3)", zIndex: 50, maxHeight: 200, overflowY: "auto" }}>
+          {sugerencias.map((s, i) => (
+            <div key={i} onClick={() => { onChange(s); setSugerencias([]); setShow(false); }}
+              style={{ padding: ".7rem 1rem", fontSize: ".82rem", color: C.dim, cursor: "pointer", borderBottom: "1px solid rgba(184,154,78,.1)" }}
+              onMouseEnter={(e) => (e.target.style.color = C.gold)}
+              onMouseLeave={(e) => (e.target.style.color = C.dim)}>
+              {s}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── REGISTER ────────────────────────────────────────────────────────────────
+function Register({ go, lang, setLang }) {
+  const [step, setStep] = useState(1); // 1: cuenta, 2: empresa, 3: nacimiento
   const [f, setF] = useState({ nombre: "", apellido: "", email: "", pass: "" });
   const [empresa, setEmpresa] = useState({ id: "", nombre: "", codigo: "" });
   const [codigoInput, setCodigoInput] = useState("");
-  const [hd, setHd] = useState({ tipo: "", autoridad: "", perfil: "" });
+  const [nacimiento, setNacimiento] = useState({ fecha: "", hora: "", lugar: "" });
   const [empresas, setEmpresas] = useState([]);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const u = (k, v) => setF((p) => ({ ...p, [k]: v }));
+  const uN = (k, v) => setNacimiento((p) => ({ ...p, [k]: v }));
 
   useEffect(() => {
     supabase.from("empresas").select("id, nombre, codigo").eq("activa", true).order("nombre")
       .then(({ data }) => setEmpresas(data || []));
   }, []);
+
+  function calcularEdad(fecha) {
+    if (!fecha) return null;
+    const hoy = new Date();
+    const nac = new Date(fecha);
+    let edad = hoy.getFullYear() - nac.getFullYear();
+    const m = hoy.getMonth() - nac.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
+    return edad;
+  }
 
   async function okStep1() {
     if (!f.nombre || !f.email || !f.pass) { setErr("Completá todos los campos."); return; }
@@ -308,23 +396,37 @@ function Register({ go, setSessionData }) {
   }
 
   async function okStep3() {
-    if (!hd.tipo || !hd.autoridad || !hd.perfil) { setErr("Completá tu diseño."); return; }
+    if (!nacimiento.fecha || !nacimiento.hora || !nacimiento.lugar) { setErr("Completá todos los campos."); return; }
+    const edad = calcularEdad(nacimiento.fecha);
+    if (edad !== null && edad < 18) { setErr("SIMPLE CLARITY está diseñado para mayores de 18 años."); return; }
     setLoading(true); setErr("");
     try {
+      // Calcular HD
+      const hdR = await fetch("/api/hd", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre: f.nombre, apellido: f.apellido, birth_date: nacimiento.fecha, birth_time: nacimiento.hora, ciudad: nacimiento.lugar }),
+      });
+      const diseno = await hdR.json();
+      if (diseno.error) { setErr("Error al calcular tu diseño: " + diseno.error); setLoading(false); return; }
+
+      // Crear usuario en Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({ email: f.email.toLowerCase().trim(), password: f.pass });
       if (authError) { setErr(authError.message.includes("already") ? "Ese email ya está registrado." : authError.message); setLoading(false); return; }
 
       const userId = authData.user?.id;
       if (!userId) { setErr("Error al crear cuenta."); setLoading(false); return; }
 
+      // Guardar perfil con diseño calculado
       await supabase.from("perfiles").insert({
         user_id: userId,
         nombre: f.nombre,
         apellido: f.apellido,
         empresa_id: empresa.id,
-        hd_tipo: hd.tipo,
-        hd_autoridad: hd.autoridad,
-        hd_perfil: hd.perfil,
+        diseno: diseno,
+        hd_tipo: diseno.tipo || diseno.type || "",
+        hd_autoridad: diseno.autoridad || diseno.authority || "",
+        hd_perfil: diseno.perfil || diseno.profile || "",
       });
 
       go("pending", f.email.toLowerCase().trim());
@@ -332,12 +434,9 @@ function Register({ go, setSessionData }) {
     setLoading(false);
   }
 
-  const tipos = ["Generador", "Generador Manifestante", "Proyector", "Manifestador", "Reflector"];
-  const autoridades = ["Sacral", "Emocional", "Esplénica", "Ego", "Self / G", "Mental / Sounding Board"];
-  const perfiles = ["1/3","1/4","2/4","2/5","3/5","3/6","4/6","4/1","5/1","5/2","6/2","6/3"];
-
   return (
     <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", padding: "2.5rem 2rem", fontFamily: GEORGIA, color: C.txt, overflowY: "auto" }}>
+      <LangToggle lang={lang} setLang={setLang} />
       <div style={logo}>SIMPLE <strong>CLARITY</strong></div>
       <div style={{ width: "100%", maxWidth: 440 }}>
         {/* Steps */}
@@ -348,12 +447,12 @@ function Register({ go, setSessionData }) {
         </div>
 
         <div style={{ fontSize: "1.5rem", fontWeight: 300, textAlign: "center", marginBottom: ".4rem" }}>
-          {step === 1 ? "Crear cuenta" : step === 2 ? "Tu empresa" : "Tu diseño biológico"}
+          {step === 1 ? "Crear cuenta" : step === 2 ? "Tu empresa" : "Tus datos de nacimiento"}
         </div>
         <div style={{ color: C.dim, textAlign: "center", marginBottom: "1.5rem", fontSize: ".88rem", lineHeight: 1.6, fontFamily: NUNITO }}>
           {step === 1 && "Ingresá tus datos para empezar."}
           {step === 2 && "El código de acceso te lo comparte tu empresa."}
-          {step === 3 && "Esta información define cómo procesás decisiones y generás energía. Es la base de todo lo que te vamos a decir."}
+          {step === 3 && "Necesitamos esta info para calcular tu diseño biológico y darte una experiencia 100% personalizada."}
         </div>
 
         <div style={{ border: "1px solid rgba(184,154,78,.2)", padding: "2.5rem", background: "rgba(255,255,255,.02)", borderRadius: 16 }}>
@@ -377,7 +476,7 @@ function Register({ go, setSessionData }) {
             <>
               <label style={lbl}>Empresa *</label>
               <select
-                style={{ ...inp, marginBottom: "1.3rem" }}
+                style={selStyle}
                 value={empresa.id}
                 onChange={(e) => {
                   const found = empresas.find((em) => em.id === e.target.value);
@@ -388,7 +487,7 @@ function Register({ go, setSessionData }) {
                 {empresas.map((em) => <option key={em.id} value={em.id}>{em.nombre}</option>)}
               </select>
               <label style={lbl}>Código de acceso *</label>
-              <input style={inp} placeholder="Ej: CU2026" value={codigoInput} onChange={(e) => setCodigoInput(e.target.value.toUpperCase())} />
+              <input style={inp} placeholder="Código de tu empresa" value={codigoInput} onChange={(e) => setCodigoInput(e.target.value.toUpperCase())} />
               <button onClick={okStep2} style={btnGold}>Confirmar empresa</button>
               <button onClick={() => { setStep(1); setErr(""); }} style={btnBack}>← Volver</button>
             </>
@@ -396,28 +495,20 @@ function Register({ go, setSessionData }) {
 
           {step === 3 && (
             <>
-              <label style={lbl}>Tipo *</label>
-              <select style={{ ...inp }} value={hd.tipo} onChange={(e) => setHd((p) => ({ ...p, tipo: e.target.value }))}>
-                <option value="">Seleccioná tu tipo</option>
-                {tipos.map((t) => <option key={t}>{t}</option>)}
-              </select>
-              <label style={lbl}>Autoridad *</label>
-              <select style={{ ...inp }} value={hd.autoridad} onChange={(e) => setHd((p) => ({ ...p, autoridad: e.target.value }))}>
-                <option value="">Seleccioná tu autoridad</option>
-                {autoridades.map((a) => <option key={a}>{a}</option>)}
-              </select>
-              <label style={lbl}>Perfil *</label>
-              <select style={{ ...inp }} value={hd.perfil} onChange={(e) => setHd((p) => ({ ...p, perfil: e.target.value }))}>
-                <option value="">Seleccioná tu perfil</option>
-                {perfiles.map((p) => <option key={p}>{p}</option>)}
-              </select>
-              <p style={{ fontFamily: NUNITO, fontSize: ".72rem", color: C.dim, lineHeight: 1.6, marginBottom: "1rem" }}>
-                Si no conocés tu diseño, calculalo en{" "}
-                <a href="https://www.jovianarchive.com" target="_blank" rel="noreferrer" style={{ color: C.gold }}>jovianarchive.com</a>
-                {" "}— solo necesitás fecha, hora y lugar de nacimiento.
-              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={lbl}>Fecha de nacimiento *</label>
+                  <input style={{ ...inp, colorScheme: "dark" }} type="date" value={nacimiento.fecha} onChange={(e) => uN("fecha", e.target.value)} />
+                </div>
+                <div>
+                  <label style={lbl}>Hora de nacimiento *</label>
+                  <input style={{ ...inp, colorScheme: "dark" }} type="time" value={nacimiento.hora} onChange={(e) => uN("hora", e.target.value)} />
+                </div>
+              </div>
+              <label style={lbl}>Lugar de nacimiento *</label>
+              <CityInput value={nacimiento.lugar} onChange={(v) => uN("lugar", v)} placeholder="Ciudad, País" />
               <button onClick={okStep3} disabled={loading} style={{ ...btnGold, opacity: loading ? 0.6 : 1, cursor: loading ? "wait" : "pointer" }}>
-                {loading ? "Creando cuenta..." : "Crear cuenta"}
+                {loading ? "Calculando tu diseño..." : "Crear cuenta"}
               </button>
               <button onClick={() => { setStep(2); setErr(""); }} style={btnBack}>← Volver</button>
             </>
@@ -530,7 +621,9 @@ function Chat({ go, profile, empresaData }) {
   const lastAssistantRef = useRef(null);
   const lastUserRef = useRef(null);
 
-  const hdProfile = profile?.hd_tipo
+  const hdProfile = profile?.diseno
+    ? JSON.stringify(profile.diseno, null, 2)
+    : profile?.hd_tipo
     ? `Tipo: ${profile.hd_tipo}\nAutoridad: ${profile.hd_autoridad}\nPerfil: ${profile.hd_perfil}`
     : null;
 
@@ -749,6 +842,7 @@ export default function App() {
   const [pendingEmail, setPendingEmail] = useState("");
   const [profile, setProfile] = useState(null);
   const [empresaData, setEmpresaData] = useState(null);
+  const [lang, setLang] = useState("es");
 
   function go(s, e) {
     if (e) setPendingEmail(e);
@@ -789,8 +883,8 @@ export default function App() {
   return (
     <div style={{ background: C.bg, minHeight: "100vh" }}>
       <style>{"*{box-sizing:border-box;margin:0;padding:0}body{background:#080808}input:-webkit-autofill{-webkit-box-shadow:0 0 0 1000px #080808 inset!important;-webkit-text-fill-color:#f0ebe0!important}select{-webkit-appearance:none;appearance:none}"}</style>
-      {screen === "welcome"  && <Welcome go={go} />}
-      {screen === "register" && <Register go={go} />}
+      {screen === "welcome"  && <Welcome go={go} lang={lang} setLang={setLang} />}
+      {screen === "register" && <Register go={go} lang={lang} setLang={setLang} />}
       {screen === "pending"  && <Pending email={pendingEmail} go={go} />}
       {screen === "login"    && <Login go={go} />}
       {screen === "chat"     && <Chat go={go} profile={profile} empresaData={empresaData} />}
