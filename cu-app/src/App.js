@@ -1,14 +1,68 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-// ─── SUPABASE ────────────────────────────────────────────────────────────────
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const NUNITO = "'Nunito', sans-serif";
+const GEORGIA = "Georgia, serif";
+
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
   process.env.REACT_APP_SUPABASE_ANON_KEY
 );
 
+// ─── COLORES (idénticos a INSIDE) ────────────────────────────────────────────
+const C = {
+  bg: "#080808",
+  gold: "#b89a4e",
+  txt: "#f0ebe0",
+  dim: "rgba(240,235,224,0.45)",
+};
+
+// ─── ESTILOS BASE (idénticos a INSIDE) ───────────────────────────────────────
+const logo = {
+  fontFamily: "monospace",
+  fontSize: ".7rem",
+  letterSpacing: ".5em",
+  color: "#b89a4e",
+  border: "1px solid #b89a4e",
+  padding: ".4em 1em",
+  display: "inline-block",
+  marginBottom: "3rem",
+};
+const lbl = {
+  fontFamily: "monospace",
+  fontSize: ".55rem",
+  letterSpacing: ".3em",
+  color: "#b89a4e",
+  textTransform: "uppercase",
+  display: "block",
+  marginBottom: ".35rem",
+};
+const inp = {
+  width: "100%",
+  background: "transparent",
+  border: "none",
+  borderBottom: "1px solid rgba(184,154,78,.3)",
+  color: "#f0ebe0",
+  fontFamily: NUNITO,
+  fontSize: ".95rem",
+  padding: ".6rem 0",
+  outline: "none",
+  marginBottom: "1.3rem",
+  display: "block",
+  boxSizing: "border-box",
+};
+
 // ─── SYSTEM PROMPT BUILDER ────────────────────────────────────────────────────
-const buildSystemPrompt = (hdProfile, empresaContexto) => {
+function buildSystemPrompt(hdProfile, empresaContexto) {
+  const hdSection = hdProfile
+    ? `\n═══════════════════════════════════════
+DISEÑO BIOLÓGICO DE ESTA PERSONA
+═══════════════════════════════════════
+${hdProfile}
+═══════════════════════════════════════\n`
+    : "";
+
   const empresaSection = empresaContexto
     ? `\n═══════════════════════════════════════
 CONTEXTO DE LA ORGANIZACIÓN (cargado automáticamente)
@@ -19,14 +73,6 @@ ${empresaContexto}
 CONTEXTO DE LA ORGANIZACIÓN
 No hay documentos de empresa cargados. Trabajá solo con el diseño de la persona y sus documentos personales.
 ═══════════════════════════════════════\n`;
-
-  const hdSection = hdProfile
-    ? `\n═══════════════════════════════════════
-DISEÑO BIOLÓGICO DE ESTA PERSONA
-═══════════════════════════════════════
-${hdProfile}
-═══════════════════════════════════════\n`
-    : "";
 
   return `Sos un AI Coach personal de desarrollo profesional.
 
@@ -93,19 +139,6 @@ CÓMO USAR EL CONTEXTO DE LA ORGANIZACIÓN
 - Cuando la persona traiga un desafío laboral, cruzá su diseño con el contexto de la empresa para ver dónde hay alineación natural y dónde puede haber fricción
 - Nunca uses el contexto de la empresa para empujar al empleado a adaptarse — usalo para iluminar la relación entre su forma de funcionar y el entorno donde está
 - Si el diseño de la persona y el contexto de la empresa están en tensión, señalalo honestamente: "Tu forma natural de funcionar y lo que esta organización valora tienen puntos de encuentro, pero también tensiones. ¿Querés que las exploremos?"
-- Si no hay documentos de la empresa cargados, trabajá solo con el diseño de la persona y sus documentos personales
-
-═══════════════════════════════════════
-PUNTOS DE ENTRADA — SIN AGENDA
-═══════════════════════════════════════
-La persona puede llegar con cualquier punto de partida. No asumas que quiere mejorar dentro de la empresa, quedarse en su rol actual o adaptarse a lo que le piden. Escuchá primero.
-
-Posibles puntos de entrada:
-- Un performance review concreto que quiere analizar
-- Un desafío o problema en el trabajo
-- Una relación difícil con su manager o equipo
-- Una decisión sobre su carrera dentro o fuera de la empresa
-- Querer entender cómo funciona para rendir mejor — o para saber si este es su lugar
 
 ═══════════════════════════════════════
 ONBOARDING — PRIMERA VEZ
@@ -167,589 +200,600 @@ LÍMITES CLAROS
 - No empujás al empleado a adaptarse a la empresa ni a irse de ella.
 - La última palabra siempre es de la persona.
 - La empresa no tiene acceso a las conversaciones del empleado bajo ninguna circunstancia.`;
-};
+}
+
+// ─── MARKDOWN renderer (idéntico a INSIDE) ───────────────────────────────────
+function md(t) {
+  return t
+    .replace(/^### (.+)$/gm, '<span style="color:#b89a4e">$1</span>')
+    .replace(/^## (.+)$/gm, '<span style="color:#b89a4e">$1</span>')
+    .replace(/^# (.+)$/gm, '<span style="color:#b89a4e">$1</span>')
+    .replace(/\*\*(.*?)\*\*/g, '<span style="color:#b89a4e">$1</span>')
+    .replace(/\n/g, "<br/>");
+}
 
 // ─── CHIPS ────────────────────────────────────────────────────────────────────
-const SUGGESTION_CHIPS = [
+const CHIPS = [
   "Tengo un performance review que quiero analizar",
   "Hay un desafío en el trabajo que no sé cómo resolver",
   "Quiero entender cómo funciono para rendir mejor",
   "Estoy evaluando una decisión sobre mi carrera",
 ];
 
-// ─── SCREENS ──────────────────────────────────────────────────────────────────
-const SCREEN = {
-  LOADING: "loading",
-  AUTH: "auth",
-  REGISTER_EMPRESA: "register_empresa",
-  ONBOARDING_HD: "onboarding_hd",
-  CHAT: "chat",
+// ─── Eye input (idéntico a INSIDE) ───────────────────────────────────────────
+function Eye({ value, onChange, placeholder = "Contraseña", onKeyDown }) {
+  const [s, setS] = useState(false);
+  return (
+    <div style={{ position: "relative", marginBottom: "1.3rem" }}>
+      <input
+        style={{ ...inp, marginBottom: 0, paddingRight: "2rem" }}
+        type={s ? "text" : "password"}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        onKeyDown={onKeyDown}
+      />
+      <button
+        onClick={() => setS((v) => !v)}
+        style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(240,235,224,.45)", fontSize: "1rem" }}
+      >
+        {s ? "🙈" : "👁"}
+      </button>
+    </div>
+  );
+}
+
+// ─── WELCOME ──────────────────────────────────────────────────────────────────
+function Welcome({ go }) {
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", fontFamily: NUNITO, color: C.txt }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600&display=swap');`}</style>
+      <div style={logo}>SIMPLE <strong>CLARITY</strong></div>
+      <div style={{ textAlign: "center", maxWidth: 580 }}>
+        <div style={{ fontSize: "clamp(1.6rem,4vw,2.4rem)", fontWeight: 300, lineHeight: 1.3, marginBottom: "2.5rem", fontFamily: GEORGIA }}>
+          Una IA para potenciar equipos,<br />
+          <span style={{ color: C.gold, fontStyle: "italic" }}>pero con estrategias personalizadas para cada uno.</span>
+        </div>
+        <div style={{ maxWidth: 320, margin: "0 auto", display: "flex", flexDirection: "column", gap: ".8rem" }}>
+          <button
+            onClick={() => go("register")}
+            style={{ background: C.gold, color: C.bg, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: "pointer", textTransform: "uppercase", width: "100%" }}
+          >
+            Crear cuenta
+          </button>
+          <button
+            onClick={() => go("login")}
+            style={{ background: "transparent", color: C.dim, border: "1px solid rgba(184,154,78,.3)", fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: "pointer", textTransform: "uppercase", width: "100%" }}
+          >
+            Ya tengo cuenta
+          </button>
+        </div>
+        <div style={{ marginTop: "2rem", fontFamily: NUNITO, fontSize: ".82rem", color: C.dim, lineHeight: 1.6 }}>
+          Porque todos tenemos una forma única de rendir, decidir y crecer.
+        </div>
+      </div>
+      <div style={{ position: "fixed", bottom: "2rem", fontFamily: "monospace", fontSize: ".55rem", color: "rgba(240,235,224,.2)", letterSpacing: ".15em", textAlign: "center" }}>
+        SIMPLE CLARITY · 2026
+      </div>
+    </div>
+  );
+}
+
+// ─── REGISTER — STEP 1: datos básicos ────────────────────────────────────────
+function Register({ go, setSessionData }) {
+  const [step, setStep] = useState(1); // 1: cuenta, 2: empresa, 3: diseño
+  const [f, setF] = useState({ nombre: "", apellido: "", email: "", pass: "" });
+  const [empresa, setEmpresa] = useState({ id: "", nombre: "", codigo: "" });
+  const [codigoInput, setCodigoInput] = useState("");
+  const [hd, setHd] = useState({ tipo: "", autoridad: "", perfil: "" });
+  const [empresas, setEmpresas] = useState([]);
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+  const u = (k, v) => setF((p) => ({ ...p, [k]: v }));
+
+  useEffect(() => {
+    supabase.from("empresas").select("id, nombre, codigo").eq("activa", true).order("nombre")
+      .then(({ data }) => setEmpresas(data || []));
+  }, []);
+
+  async function okStep1() {
+    if (!f.nombre || !f.email || !f.pass) { setErr("Completá todos los campos."); return; }
+    setErr(""); setStep(2);
+  }
+
+  async function okStep2() {
+    if (!empresa.id) { setErr("Seleccioná tu empresa."); return; }
+    if (codigoInput.trim().toUpperCase() !== empresa.codigo) { setErr("El código no es correcto. Pedíselo a tu empresa."); return; }
+    setErr(""); setStep(3);
+  }
+
+  async function okStep3() {
+    if (!hd.tipo || !hd.autoridad || !hd.perfil) { setErr("Completá tu diseño."); return; }
+    setLoading(true); setErr("");
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({ email: f.email.toLowerCase().trim(), password: f.pass });
+      if (authError) { setErr(authError.message.includes("already") ? "Ese email ya está registrado." : authError.message); setLoading(false); return; }
+
+      const userId = authData.user?.id;
+      if (!userId) { setErr("Error al crear cuenta."); setLoading(false); return; }
+
+      await supabase.from("perfiles").insert({
+        user_id: userId,
+        nombre: f.nombre,
+        apellido: f.apellido,
+        empresa_id: empresa.id,
+        hd_tipo: hd.tipo,
+        hd_autoridad: hd.autoridad,
+        hd_perfil: hd.perfil,
+      });
+
+      go("pending", f.email.toLowerCase().trim());
+    } catch (e) { setErr("Error: " + (e?.message || "No se pudo conectar.")); }
+    setLoading(false);
+  }
+
+  const tipos = ["Generador", "Generador Manifestante", "Proyector", "Manifestador", "Reflector"];
+  const autoridades = ["Sacral", "Emocional", "Esplénica", "Ego", "Self / G", "Mental / Sounding Board"];
+  const perfiles = ["1/3","1/4","2/4","2/5","3/5","3/6","4/6","4/1","5/1","5/2","6/2","6/3"];
+
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", padding: "2.5rem 2rem", fontFamily: GEORGIA, color: C.txt, overflowY: "auto" }}>
+      <div style={logo}>SIMPLE <strong>CLARITY</strong></div>
+      <div style={{ width: "100%", maxWidth: 440 }}>
+        {/* Steps */}
+        <div style={{ display: "flex", justifyContent: "center", gap: ".4rem", marginBottom: "1.5rem" }}>
+          {[1,2,3].map((s) => (
+            <div key={s} style={{ width: 28, height: 4, borderRadius: 2, background: step >= s ? C.gold : "rgba(184,154,78,.2)", transition: "background .3s" }} />
+          ))}
+        </div>
+
+        <div style={{ fontSize: "1.5rem", fontWeight: 300, textAlign: "center", marginBottom: ".4rem" }}>
+          {step === 1 ? "Crear cuenta" : step === 2 ? "Tu empresa" : "Tu diseño biológico"}
+        </div>
+        <div style={{ color: C.dim, textAlign: "center", marginBottom: "1.5rem", fontSize: ".88rem", lineHeight: 1.6, fontFamily: NUNITO }}>
+          {step === 1 && "Ingresá tus datos para empezar."}
+          {step === 2 && "El código de acceso te lo comparte tu empresa."}
+          {step === 3 && "Esta información define cómo procesás decisiones y generás energía. Es la base de todo lo que te vamos a decir."}
+        </div>
+
+        <div style={{ border: "1px solid rgba(184,154,78,.2)", padding: "2.5rem", background: "rgba(255,255,255,.02)", borderRadius: 16 }}>
+          {err && <div style={{ color: "#c06040", fontFamily: "monospace", fontSize: ".63rem", marginBottom: ".8rem", textAlign: "center" }}>{err}</div>}
+
+          {step === 1 && (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div><label style={lbl}>Nombre *</label><input style={inp} placeholder="Tu nombre" value={f.nombre} onChange={(e) => u("nombre", e.target.value)} /></div>
+                <div><label style={lbl}>Apellido</label><input style={inp} placeholder="Tu apellido" value={f.apellido} onChange={(e) => u("apellido", e.target.value)} /></div>
+              </div>
+              <label style={lbl}>Email *</label>
+              <input style={inp} type="email" placeholder="tu@email.com" value={f.email} onChange={(e) => u("email", e.target.value)} />
+              <label style={lbl}>Contraseña *</label>
+              <Eye value={f.pass} onChange={(e) => u("pass", e.target.value)} placeholder="Mínimo 6 caracteres" />
+              <button onClick={okStep1} style={btnGold}>Continuar</button>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <label style={lbl}>Empresa *</label>
+              <select
+                style={{ ...inp, marginBottom: "1.3rem" }}
+                value={empresa.id}
+                onChange={(e) => {
+                  const found = empresas.find((em) => em.id === e.target.value);
+                  setEmpresa(found ? { id: found.id, nombre: found.nombre, codigo: found.codigo } : { id: "", nombre: "", codigo: "" });
+                }}
+              >
+                <option value="">Seleccioná tu empresa</option>
+                {empresas.map((em) => <option key={em.id} value={em.id}>{em.nombre}</option>)}
+              </select>
+              <label style={lbl}>Código de acceso *</label>
+              <input style={inp} placeholder="Ej: CU2026" value={codigoInput} onChange={(e) => setCodigoInput(e.target.value.toUpperCase())} />
+              <button onClick={okStep2} style={btnGold}>Confirmar empresa</button>
+              <button onClick={() => { setStep(1); setErr(""); }} style={btnBack}>← Volver</button>
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <label style={lbl}>Tipo *</label>
+              <select style={{ ...inp }} value={hd.tipo} onChange={(e) => setHd((p) => ({ ...p, tipo: e.target.value }))}>
+                <option value="">Seleccioná tu tipo</option>
+                {tipos.map((t) => <option key={t}>{t}</option>)}
+              </select>
+              <label style={lbl}>Autoridad *</label>
+              <select style={{ ...inp }} value={hd.autoridad} onChange={(e) => setHd((p) => ({ ...p, autoridad: e.target.value }))}>
+                <option value="">Seleccioná tu autoridad</option>
+                {autoridades.map((a) => <option key={a}>{a}</option>)}
+              </select>
+              <label style={lbl}>Perfil *</label>
+              <select style={{ ...inp }} value={hd.perfil} onChange={(e) => setHd((p) => ({ ...p, perfil: e.target.value }))}>
+                <option value="">Seleccioná tu perfil</option>
+                {perfiles.map((p) => <option key={p}>{p}</option>)}
+              </select>
+              <p style={{ fontFamily: NUNITO, fontSize: ".72rem", color: C.dim, lineHeight: 1.6, marginBottom: "1rem" }}>
+                Si no conocés tu diseño, calculalo en{" "}
+                <a href="https://www.jovianarchive.com" target="_blank" rel="noreferrer" style={{ color: C.gold }}>jovianarchive.com</a>
+                {" "}— solo necesitás fecha, hora y lugar de nacimiento.
+              </p>
+              <button onClick={okStep3} disabled={loading} style={{ ...btnGold, opacity: loading ? 0.6 : 1, cursor: loading ? "wait" : "pointer" }}>
+                {loading ? "Creando cuenta..." : "Crear cuenta"}
+              </button>
+              <button onClick={() => { setStep(2); setErr(""); }} style={btnBack}>← Volver</button>
+            </>
+          )}
+        </div>
+
+        <div style={{ textAlign: "center", margin: "1.2rem 0", color: C.dim, fontFamily: "monospace", fontSize: ".7rem" }}>
+          ¿Ya tenés cuenta?{" "}
+          <button onClick={() => go("login")} style={{ color: C.gold, background: "none", border: "none", cursor: "pointer", fontFamily: "monospace", fontSize: ".63rem" }}>
+            Ingresá acá
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PENDING ──────────────────────────────────────────────────────────────────
+function Pending({ email, go }) {
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", fontFamily: GEORGIA, color: C.txt }}>
+      <div style={logo}>SIMPLE <strong>CLARITY</strong></div>
+      <div style={{ textAlign: "center", maxWidth: 460 }}>
+        <div style={{ fontSize: "2.5rem", marginBottom: "1.2rem" }}>✉️</div>
+        <div style={{ fontSize: "1.5rem", fontWeight: 300, marginBottom: ".8rem" }}>Revisá tu email</div>
+        <div style={{ color: C.dim, lineHeight: 1.7, marginBottom: "1.5rem" }}>
+          Te mandamos un link a <span style={{ color: C.gold }}>{email}</span>.<br /><br />
+          Una vez que confirmés podés iniciar tu sesión.
+        </div>
+        <div style={{ border: "1px solid rgba(184,154,78,.2)", padding: "1rem 1.5rem", background: "rgba(184,154,78,.04)", marginBottom: "2rem", fontFamily: "monospace", fontSize: ".68rem", color: C.dim, lineHeight: 1.8 }}>
+          ¿No recibiste el email? Revisá tu carpeta de spam.
+        </div>
+        <button onClick={() => go("welcome")} style={{ color: C.gold, background: "none", border: "none", cursor: "pointer", fontFamily: "monospace", fontSize: ".63rem" }}>← Volver al inicio</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── LOGIN ────────────────────────────────────────────────────────────────────
+function Login({ go, setSessionData }) {
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function ok() {
+    if (!email || !pass) { setErr("Completá email y contraseña."); return; }
+    setLoading(true); setErr("");
+    try {
+      const { error: authError } = await supabase.auth.signInWithPassword({ email: email.toLowerCase().trim(), password: pass });
+      if (authError) {
+        setErr(authError.message.includes("Email not confirmed") ? "Confirmá tu email antes de ingresar." : "Email o contraseña incorrectos.");
+        setLoading(false); return;
+      }
+      // profile se carga en App via onAuthStateChange
+    } catch { setErr("Error de conexión."); }
+    setLoading(false);
+  }
+
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", fontFamily: NUNITO, color: C.txt }}>
+      <div style={logo}>SIMPLE <strong>CLARITY</strong></div>
+      <div style={{ width: "100%", maxWidth: 420 }}>
+        <div style={{ fontSize: "1.5rem", fontWeight: 300, textAlign: "center", marginBottom: ".4rem", fontFamily: GEORGIA }}>Ingresar</div>
+        <div style={{ color: C.dim, textAlign: "center", marginBottom: "1.5rem", fontSize: ".9rem" }}>Bienvenido de nuevo.</div>
+        <div style={{ border: "1px solid rgba(184,154,78,.2)", padding: "2.5rem", background: "rgba(255,255,255,.02)", borderRadius: 16 }}>
+          {err && <div style={{ color: "#c06040", fontFamily: "monospace", fontSize: ".63rem", marginBottom: ".8rem", textAlign: "center" }}>{err}</div>}
+          <label style={lbl}>Email</label>
+          <input style={inp} type="email" placeholder="tu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === "Enter" && ok()} />
+          <label style={lbl}>Contraseña</label>
+          <Eye value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Tu contraseña" onKeyDown={(e) => e.key === "Enter" && ok()} />
+          <div style={{ textAlign: "right", marginBottom: "1rem" }}>
+            <button onClick={async () => {
+              if (!email) { setErr("Ingresá tu email primero."); return; }
+              const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase().trim(), { redirectTo: "https://clarity.metodosimple.ar" });
+              if (!error) setErr("✓ Te mandamos un link para resetear tu contraseña.");
+              else setErr(error.message);
+            }} style={{ color: C.gold, background: "none", border: "none", cursor: "pointer", fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".1em" }}>
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
+          <button onClick={ok} disabled={loading} style={{ ...btnGold, opacity: loading ? 0.7 : 1 }}>
+            {loading ? "..." : "Ingresar"}
+          </button>
+        </div>
+        <div style={{ textAlign: "center", margin: "1.2rem 0", color: C.dim, fontFamily: "monospace", fontSize: ".7rem" }}>
+          ¿No tenés cuenta?{" "}
+          <button onClick={() => go("register")} style={{ color: C.gold, background: "none", border: "none", cursor: "pointer", fontFamily: "monospace", fontSize: ".63rem" }}>
+            Crear cuenta
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── CHAT ─────────────────────────────────────────────────────────────────────
+function Chat({ go, profile, empresaData }) {
+  const [darkMode, setDarkMode] = useState(true);
+  const DC = darkMode
+    ? { bg: "#080808", gold: "#b89a4e", txt: "#f0ebe0", dim: "rgba(240,235,224,0.45)" }
+    : { bg: "#f5f0e8", gold: "#b89a4e", txt: "#1a1a1a", dim: "rgba(26,26,26,0.5)" };
+
+  const [msgs, setMsgs] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [started, setStarted] = useState(false);
+
+  const chatContainerRef = useRef(null);
+  const lastAssistantRef = useRef(null);
+  const lastUserRef = useRef(null);
+
+  const hdProfile = profile?.hd_tipo
+    ? `Tipo: ${profile.hd_tipo}\nAutoridad: ${profile.hd_autoridad}\nPerfil: ${profile.hd_perfil}`
+    : null;
+
+  // Load history
+  useEffect(() => {
+    if (!profile?.user_id) return;
+    supabase.from("mensajes").select("role, content").eq("user_id", profile.user_id).order("created_at", { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setMsgs(data);
+          setStarted(true);
+        }
+      });
+  }, [profile?.user_id]);
+
+  // Scroll
+  useEffect(() => {
+    if (!msgs.length) return;
+    const last = msgs[msgs.length - 1];
+    const ref = last.role === "assistant" ? lastAssistantRef : lastUserRef;
+    if (ref.current && chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = ref.current.offsetTop - chatContainerRef.current.offsetTop - 20;
+    }
+  }, [msgs]);
+
+  async function saveMsg(role, content) {
+    await supabase.from("mensajes").insert({ user_id: profile.user_id, role, content });
+  }
+
+  async function send(t) {
+    const txt = t || input.trim();
+    if (!txt || loading) return;
+    setInput("");
+    setStarted(true);
+    const next = [...msgs, { role: "user", content: txt }];
+    setMsgs(next);
+    setLoading(true);
+    if (txt !== "__CLARITY_START__") await saveMsg("user", txt);
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 1000,
+          system: buildSystemPrompt(hdProfile, empresaData?.documentos_contexto || null),
+          messages: next,
+        }),
+      });
+      const data = await response.json();
+      const reply = data.content?.find((b) => b.type === "text")?.text || "Error al responder.";
+      const finalMsgs = [...next, { role: "assistant", content: reply }];
+      setMsgs(finalMsgs);
+      await saveMsg("assistant", reply);
+    } catch {
+      setMsgs([...next, { role: "assistant", content: "Error de conexión." }]);
+    }
+    setLoading(false);
+  }
+
+  async function startSession() {
+    await send("__CLARITY_START__");
+  }
+
+  return (
+    <div style={{ background: DC.bg, minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: NUNITO, color: DC.txt }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600&display=swap');
+        @keyframes p{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+        .chat-scroll::-webkit-scrollbar{width:4px}
+        .chat-scroll::-webkit-scrollbar-track{background:transparent}
+        .chat-scroll::-webkit-scrollbar-thumb{background:rgba(184,154,78,.25);border-radius:2px}
+        .chat-scroll{scrollbar-width:thin;scrollbar-color:rgba(184,154,78,.25) transparent}
+        textarea, input { color: ${darkMode ? "#f0ebe0" : "#1a1a1a"} !important; -webkit-text-fill-color: ${darkMode ? "#f0ebe0" : "#1a1a1a"} !important; caret-color: #b89a4e; }
+        textarea::placeholder, input::placeholder { color: ${darkMode ? "rgba(240,235,224,.3)" : "rgba(26,26,26,.35)"} !important; -webkit-text-fill-color: ${darkMode ? "rgba(240,235,224,.3)" : "rgba(26,26,26,.35)"} !important; }
+        select option { background: #080808; color: #f0ebe0; }
+      `}</style>
+
+      {/* Header */}
+      <div style={{ padding: ".9rem 2rem", borderBottom: "1px solid rgba(184,154,78,.2)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
+          <div style={{ ...logo, marginBottom: 0 }}>CLARITY</div>
+          <div style={{ fontFamily: NUNITO, fontSize: ".85rem", color: DC.dim }}>
+            Hola, <span style={{ color: DC.txt, fontWeight: 600 }}>{profile?.nombre}</span>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          {empresaData && (
+            <span style={{ fontFamily: "monospace", fontSize: ".52rem", letterSpacing: ".15em", color: DC.dim, border: "1px solid rgba(184,154,78,.2)", padding: ".3em .8em", borderRadius: 20 }}>
+              {empresaData.nombre}
+            </span>
+          )}
+          <button onClick={() => setDarkMode((v) => !v)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, opacity: 0.8, display: "flex", alignItems: "center" }}>
+            {darkMode
+              ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={DC.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={DC.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>}
+          </button>
+          <button onClick={() => supabase.auth.signOut()} style={{ color: DC.gold, background: "none", border: "none", cursor: "pointer", fontFamily: "monospace", fontSize: ".6rem" }}>
+            Salir →
+          </button>
+        </div>
+      </div>
+
+      {/* Chat area */}
+      <div style={{ flex: 1, maxWidth: 900, margin: "0 auto", width: "100%", padding: "0 clamp(60px,10vw,150px)", display: "flex", flexDirection: "column" }}>
+        <div ref={chatContainerRef} className="chat-scroll" style={{ flex: 1, padding: "1.8rem 0", paddingRight: "2rem", display: "flex", flexDirection: "column", gap: "1.8rem", overflowY: "auto", maxHeight: "72vh", minHeight: 180 }}>
+
+          {!started && msgs.length === 0 && (
+            <div style={{ textAlign: "center", padding: "2.5rem 1rem", border: "1px solid rgba(184,154,78,.15)" }}>
+              <div style={{ fontSize: "1.9rem", fontWeight: 300, marginBottom: ".8rem", fontFamily: GEORGIA }}>
+                Hola, <span style={{ color: DC.gold, fontStyle: "italic" }}>{profile?.nombre}</span>
+              </div>
+              <div style={{ fontSize: ".9rem", color: DC.dim, marginBottom: "2rem", lineHeight: 1.7, maxWidth: 480, margin: "0 auto 2rem" }}>
+                Soy tu AI Coach personal. Todo lo que te digo está basado en tu diseño biológico único — no en fórmulas genéricas. Y es completamente privado: tu empresa no tiene acceso a esta conversación.
+              </div>
+              <button onClick={startSession} style={{ ...btnGold, display: "inline-block", width: "auto", marginBottom: "2rem" }}>
+                Empezar
+              </button>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: ".5rem", justifyContent: "center" }}>
+                {CHIPS.map((c) => (
+                  <button key={c} onClick={() => send(c)}
+                    style={{ fontFamily: "monospace", fontSize: ".58rem", padding: ".4em .85em", border: "1px solid rgba(184,154,78,.25)", color: DC.dim, cursor: "pointer", background: "transparent", borderRadius: 20 }}
+                    onMouseEnter={(e) => { e.target.style.borderColor = DC.gold; e.target.style.color = DC.gold; }}
+                    onMouseLeave={(e) => { e.target.style.borderColor = "rgba(184,154,78,.25)"; e.target.style.color = DC.dim; }}>
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {msgs.filter((m) => m.content !== "__CLARITY_START__").map((m, i, arr) => (
+            <div key={i}
+              ref={m.role === "assistant" && i === arr.length - 1 ? lastAssistantRef : m.role === "user" && i === arr.length - 1 ? lastUserRef : null}
+              style={{ textAlign: m.role === "user" ? "right" : "left" }}>
+              <div style={{ fontFamily: "monospace", fontSize: ".53rem", letterSpacing: ".3em", textTransform: "uppercase", marginBottom: ".3rem", color: m.role === "user" ? "rgba(240,235,224,.3)" : DC.gold }}>
+                {m.role === "user" ? "Vos" : "CLARITY"}
+              </div>
+              {m.role === "assistant" ? (
+                <div style={{ fontSize: "1rem", color: DC.txt, lineHeight: 1.85, fontFamily: GEORGIA }} dangerouslySetInnerHTML={{ __html: md(m.content) }} />
+              ) : (
+                <div style={{ fontSize: "1rem", fontStyle: "italic", color: "rgba(240,235,224,.55)", lineHeight: 1.7, fontFamily: NUNITO }}>
+                  {m.content}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {loading && (
+            <div>
+              <div style={{ fontFamily: "monospace", fontSize: ".53rem", letterSpacing: ".3em", color: DC.gold, marginBottom: ".3rem" }}>CLARITY</div>
+              <div style={{ display: "flex", gap: 5 }}>
+                {[0, 1, 2].map((i) => (
+                  <div key={i} style={{ width: 5, height: 5, background: DC.gold, borderRadius: "50%", animation: `p 1.4s ${i * 0.2}s infinite ease-in-out` }} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Input */}
+        <div style={{ padding: "1rem 0 1.5rem", borderTop: "1px solid rgba(184,154,78,.15)", display: "flex", gap: ".8rem", alignItems: "flex-end" }}>
+          <textarea
+            style={{ flex: 1, background: "transparent", border: "none", borderBottom: `1px solid ${DC.gold}40`, color: DC.txt, fontFamily: GEORGIA, fontSize: ".95rem", padding: ".6rem 0", outline: "none", resize: "none", minHeight: "2rem", lineHeight: 1.5 }}
+            value={input}
+            placeholder="¿De qué hablamos?"
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+            rows={1}
+          />
+          <button onClick={() => send()} disabled={loading || !input.trim()}
+            style={{ background: "transparent", border: "1px solid " + DC.gold, borderRadius: 20, color: DC.gold, fontFamily: "monospace", fontSize: ".6rem", letterSpacing: ".2em", padding: ".6em 1em", cursor: "pointer", textTransform: "uppercase", marginBottom: 2, opacity: loading || !input.trim() ? 0.3 : 1 }}>
+            Enviar
+          </button>
+        </div>
+      </div>
+
+      <div style={{ textAlign: "center", padding: ".6rem", fontFamily: "monospace", fontSize: ".5rem", color: darkMode ? "rgba(240,235,224,.15)" : "rgba(26,26,26,.3)", letterSpacing: ".15em" }}>
+        SIMPLE CLARITY · 2026 · Tus conversaciones son privadas. La empresa no tiene acceso.
+      </div>
+    </div>
+  );
+}
+
+// ─── SHARED BUTTON STYLES ─────────────────────────────────────────────────────
+const btnGold = {
+  background: C.gold,
+  color: C.bg,
+  border: "none",
+  borderRadius: 24,
+  fontFamily: "monospace",
+  fontSize: ".65rem",
+  letterSpacing: ".3em",
+  padding: ".85em 2em",
+  cursor: "pointer",
+  textTransform: "uppercase",
+  width: "100%",
+};
+const btnBack = {
+  background: "none",
+  border: "none",
+  color: C.dim,
+  cursor: "pointer",
+  fontFamily: "monospace",
+  fontSize: ".55rem",
+  letterSpacing: ".1em",
+  marginTop: ".8rem",
+  width: "100%",
+  textAlign: "center",
 };
 
-// ─── APP ──────────────────────────────────────────────────────────────────────
+// ─── APP ROOT ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [screen, setScreen] = useState(SCREEN.LOADING);
-  const [user, setUser] = useState(null);
+  const [screen, setScreen] = useState("loading");
+  const [pendingEmail, setPendingEmail] = useState("");
   const [profile, setProfile] = useState(null);
   const [empresaData, setEmpresaData] = useState(null);
 
-  // Auth
-  const [authMode, setAuthMode] = useState("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [nombre, setNombre] = useState("");
-  const [authError, setAuthError] = useState("");
-  const [authLoading, setAuthLoading] = useState(false);
+  function go(s, e) {
+    if (e) setPendingEmail(e);
+    setScreen(s);
+  }
 
-  // Empresa
-  const [empresas, setEmpresas] = useState([]);
-  const [selectedEmpresa, setSelectedEmpresa] = useState("");
-  const [codigoEmpresa, setCodigoEmpresa] = useState("");
-  const [empresaError, setEmpresaError] = useState("");
-  const [empresaLoading, setEmpresaLoading] = useState(false);
-
-  // HD
-  const [hdTipo, setHdTipo] = useState("");
-  const [hdAutoridad, setHdAutoridad] = useState("");
-  const [hdPerfil, setHdPerfil] = useState("");
-  const [hdLoading, setHdLoading] = useState(false);
-
-  // Chat
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [chatLoading, setChatLoading] = useState(false);
-  const [showChips, setShowChips] = useState(true);
-  const messagesEndRef = useRef(null);
-  const textareaRef = useRef(null);
-
-  // ── Init ────────────────────────────────────────────────────────────────────
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-        loadProfile(session.user.id);
-      } else {
-        setScreen(SCREEN.AUTH);
-      }
+      if (session?.user) loadProfile(session.user.id);
+      else setScreen("welcome");
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        loadProfile(session.user.id);
-      } else {
-        setUser(null);
-        setProfile(null);
-        setEmpresaData(null);
-        setMessages([]);
-        setScreen(SCREEN.AUTH);
-      }
+      if (session?.user) loadProfile(session.user.id);
+      else { setProfile(null); setEmpresaData(null); setScreen("welcome"); }
     });
-
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
-    }
-  }, [input]);
-
-  // ── Profile loader ──────────────────────────────────────────────────────────
-  const loadProfile = async (userId) => {
-    const { data, error } = await supabase
-      .from("perfiles")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
-
-    if (error || !data) {
-      await loadEmpresas();
-      setScreen(SCREEN.REGISTER_EMPRESA);
-      return;
-    }
-
+  async function loadProfile(userId) {
+    const { data, error } = await supabase.from("perfiles").select("*").eq("user_id", userId).single();
+    if (error || !data) { setScreen("welcome"); return; }
     setProfile(data);
-
-    if (!data.hd_tipo) {
-      setScreen(SCREEN.ONBOARDING_HD);
-      return;
-    }
-
-    // Load empresa context
-    let emp = null;
     if (data.empresa_id) {
-      const { data: empData } = await supabase
-        .from("empresas")
-        .select("nombre, documentos_contexto")
-        .eq("id", data.empresa_id)
-        .single();
-      emp = empData;
+      const { data: emp } = await supabase.from("empresas").select("nombre, documentos_contexto").eq("id", data.empresa_id).single();
       setEmpresaData(emp);
     }
+    setScreen("chat");
+  }
 
-    // Load message history
-    const { data: hist } = await supabase
-      .from("mensajes")
-      .select("role, content")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: true });
+  if (screen === "loading") return (
+    <div style={{ background: C.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.gold, animation: "pulse 1.4s ease-in-out infinite" }} />
+      <style>{`@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}`}</style>
+    </div>
+  );
 
-    if (!hist || hist.length === 0) {
-      setScreen(SCREEN.CHAT);
-      await sendOnboarding(data, emp);
-    } else {
-      setMessages(hist);
-      setShowChips(false);
-      setScreen(SCREEN.CHAT);
-    }
-  };
-
-  const loadEmpresas = async () => {
-    const { data } = await supabase
-      .from("empresas")
-      .select("id, nombre, codigo")
-      .eq("activa", true)
-      .order("nombre");
-    setEmpresas(data || []);
-  };
-
-  // ── Auth ────────────────────────────────────────────────────────────────────
-  const handleAuth = async (e) => {
-    e.preventDefault();
-    setAuthError("");
-    setAuthLoading(true);
-    try {
-      if (authMode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) setAuthError("Email o contraseña incorrectos.");
-      } else {
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) {
-          setAuthError(error.message);
-        } else if (data.user) {
-          setUser(data.user);
-          await loadEmpresas();
-          setScreen(SCREEN.REGISTER_EMPRESA);
-        }
-      }
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  // ── Empresa ─────────────────────────────────────────────────────────────────
-  const handleEmpresaSubmit = async (e) => {
-    e.preventDefault();
-    setEmpresaError("");
-    setEmpresaLoading(true);
-    try {
-      const empresa = empresas.find((em) => em.id === selectedEmpresa);
-      if (!empresa) { setEmpresaError("Seleccioná una empresa."); return; }
-      if (empresa.codigo !== codigoEmpresa.trim().toUpperCase()) {
-        setEmpresaError("El código no es correcto. Pedíselo a tu empresa.");
-        return;
-      }
-      const { data: newProfile, error } = await supabase
-        .from("perfiles")
-        .insert({
-          user_id: user.id,
-          nombre: nombre || email.split("@")[0],
-          empresa_id: empresa.id,
-        })
-        .select()
-        .single();
-
-      if (error) { setEmpresaError("Hubo un error. Intentá de nuevo."); return; }
-      setProfile(newProfile);
-      setScreen(SCREEN.ONBOARDING_HD);
-    } finally {
-      setEmpresaLoading(false);
-    }
-  };
-
-  // ── HD Submit ───────────────────────────────────────────────────────────────
-  const handleHdSubmit = async (e) => {
-    e.preventDefault();
-    if (!hdTipo || !hdAutoridad || !hdPerfil) return;
-    setHdLoading(true);
-
-    const { data: updated, error } = await supabase
-      .from("perfiles")
-      .update({ hd_tipo: hdTipo, hd_autoridad: hdAutoridad, hd_perfil: hdPerfil })
-      .eq("user_id", user.id)
-      .select()
-      .single();
-
-    if (error) { setHdLoading(false); return; }
-    setProfile(updated);
-
-    let emp = null;
-    if (updated.empresa_id) {
-      const { data: empData } = await supabase
-        .from("empresas")
-        .select("nombre, documentos_contexto")
-        .eq("id", updated.empresa_id)
-        .single();
-      emp = empData;
-      setEmpresaData(emp);
-    }
-
-    setScreen(SCREEN.CHAT);
-    await sendOnboarding(updated, emp);
-    setHdLoading(false);
-  };
-
-  // ── Onboarding ──────────────────────────────────────────────────────────────
-  const sendOnboarding = async (prof, emp) => {
-    const hdProfile = prof?.hd_tipo
-      ? `Tipo: ${prof.hd_tipo}\nAutoridad: ${prof.hd_autoridad}\nPerfil: ${prof.hd_perfil}`
-      : null;
-    const systemPrompt = buildSystemPrompt(hdProfile, emp?.documentos_contexto || null);
-    setChatLoading(true);
-    try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 1000,
-          system: systemPrompt,
-          messages: [{ role: "user", content: "__CLARITY_START__" }],
-        }),
-      });
-      const data = await response.json();
-      const assistantText = data.content?.find((b) => b.type === "text")?.text || "";
-      const assistantMsg = { role: "assistant", content: assistantText };
-      setMessages([assistantMsg]);
-      setShowChips(true);
-      await supabase.from("mensajes").insert({
-        user_id: prof.user_id || user.id,
-        role: "assistant",
-        content: assistantText,
-      });
-    } finally {
-      setChatLoading(false);
-    }
-  };
-
-  // ── Send message ────────────────────────────────────────────────────────────
-  const sendMessage = async (text) => {
-    if (!text.trim() || chatLoading) return;
-    const userMsg = { role: "user", content: text };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
-    setInput("");
-    setShowChips(false);
-    setChatLoading(true);
-
-    await supabase.from("mensajes").insert({ user_id: user.id, role: "user", content: text });
-
-    const hdProfile = profile?.hd_tipo
-      ? `Tipo: ${profile.hd_tipo}\nAutoridad: ${profile.hd_autoridad}\nPerfil: ${profile.hd_perfil}`
-      : null;
-    const systemPrompt = buildSystemPrompt(hdProfile, empresaData?.documentos_contexto || null);
-
-    try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 1000,
-          system: systemPrompt,
-          messages: newMessages,
-        }),
-      });
-      const data = await response.json();
-      const assistantText = data.content?.find((b) => b.type === "text")?.text || "";
-      setMessages([...newMessages, { role: "assistant", content: assistantText }]);
-      await supabase.from("mensajes").insert({ user_id: user.id, role: "assistant", content: assistantText });
-    } finally {
-      setChatLoading(false);
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
-  };
-
-  // ── RENDER ──────────────────────────────────────────────────────────────────
-  if (screen === SCREEN.LOADING) return <LoadingScreen />;
-  if (screen === SCREEN.AUTH)
-    return <AuthScreen authMode={authMode} setAuthMode={setAuthMode} email={email} setEmail={setEmail} password={password} setPassword={setPassword} nombre={nombre} setNombre={setNombre} authError={authError} authLoading={authLoading} onSubmit={handleAuth} />;
-  if (screen === SCREEN.REGISTER_EMPRESA)
-    return <EmpresaScreen empresas={empresas} selectedEmpresa={selectedEmpresa} setSelectedEmpresa={setSelectedEmpresa} codigoEmpresa={codigoEmpresa} setCodigoEmpresa={setCodigoEmpresa} nombre={nombre} setNombre={setNombre} error={empresaError} loading={empresaLoading} onSubmit={handleEmpresaSubmit} authMode={authMode} />;
-  if (screen === SCREEN.ONBOARDING_HD)
-    return <HdScreen hdTipo={hdTipo} setHdTipo={setHdTipo} hdAutoridad={hdAutoridad} setHdAutoridad={setHdAutoridad} hdPerfil={hdPerfil} setHdPerfil={setHdPerfil} loading={hdLoading} onSubmit={handleHdSubmit} />;
-
-  // ── CHAT ────────────────────────────────────────────────────────────────────
   return (
-    <div style={S.chatRoot}>
-      <header style={S.header}>
-        <div style={S.headerInner}>
-          <div style={S.logoMark}>
-            <span style={S.logoS}>S</span>
-            <span style={S.logoLabel}>CLARITY</span>
-          </div>
-          {empresaData && <span style={S.empresaBadge}>{empresaData.nombre}</span>}
-          <button style={S.signOutBtn} onClick={() => supabase.auth.signOut()}>Salir</button>
-        </div>
-      </header>
-
-      <main style={S.messagesArea}>
-        {messages.length === 0 && !chatLoading && <WelcomeCard />}
-        {messages.map((msg, i) => (
-          <MessageBubble key={i} role={msg.role} content={msg.content} />
-        ))}
-        {chatLoading && <TypingIndicator />}
-        <div ref={messagesEndRef} />
-      </main>
-
-      {showChips && messages.length > 0 && (
-        <div style={S.chipsArea}>
-          {SUGGESTION_CHIPS.map((chip, i) => (
-            <button key={i} style={S.chip} onClick={() => sendMessage(chip)}>{chip}</button>
-          ))}
-        </div>
-      )}
-
-      <div style={S.inputArea}>
-        <div style={S.inputWrapper}>
-          <textarea
-            ref={textareaRef}
-            style={S.textarea}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Escribí lo que tenés en mente..."
-            rows={1}
-          />
-          <button
-            style={{ ...S.sendBtn, opacity: input.trim() && !chatLoading ? 1 : 0.35 }}
-            onClick={() => sendMessage(input)}
-            disabled={!input.trim() || chatLoading}
-          >
-            <SendIcon />
-          </button>
-        </div>
-        <p style={S.privacyNote}>Tus conversaciones son privadas. La empresa no tiene acceso.</p>
-      </div>
+    <div style={{ background: C.bg, minHeight: "100vh" }}>
+      <style>{"*{box-sizing:border-box;margin:0;padding:0}body{background:#080808}input:-webkit-autofill{-webkit-box-shadow:0 0 0 1000px #080808 inset!important;-webkit-text-fill-color:#f0ebe0!important}select{-webkit-appearance:none;appearance:none}"}</style>
+      {screen === "welcome"  && <Welcome go={go} />}
+      {screen === "register" && <Register go={go} />}
+      {screen === "pending"  && <Pending email={pendingEmail} go={go} />}
+      {screen === "login"    && <Login go={go} />}
+      {screen === "chat"     && <Chat go={go} profile={profile} empresaData={empresaData} />}
     </div>
   );
 }
-
-// ─── SUB-COMPONENTS ───────────────────────────────────────────────────────────
-
-function LoadingScreen() {
-  return <div style={S.fullCenter}><div style={S.pulsingDot} /></div>;
-}
-
-function WelcomeCard() {
-  return (
-    <div style={S.welcomeCard}>
-      <p style={S.welcomeTitle}>Una IA para potenciar equipos, pero con estrategias personalizadas para cada uno.</p>
-      <p style={S.welcomeSub}>Porque todos tenemos una forma única de rendir, decidir y crecer.</p>
-    </div>
-  );
-}
-
-function MessageBubble({ role, content }) {
-  const isUser = role === "user";
-  return (
-    <div style={{ ...S.bubbleRow, justifyContent: isUser ? "flex-end" : "flex-start" }}>
-      {!isUser && <div style={S.avatarDot} />}
-      <div style={isUser ? S.bubbleUser : S.bubbleAssistant}>
-        {content.split("\n").map((line, i, arr) => (
-          <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function TypingIndicator() {
-  return (
-    <div style={{ ...S.bubbleRow, justifyContent: "flex-start" }}>
-      <div style={S.avatarDot} />
-      <div style={S.typingBubble}>
-        <span style={S.dot1} /><span style={S.dot2} /><span style={S.dot3} />
-      </div>
-    </div>
-  );
-}
-
-function SendIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
-    </svg>
-  );
-}
-
-function AuthScreen({ authMode, setAuthMode, email, setEmail, password, setPassword, nombre, setNombre, authError, authLoading, onSubmit }) {
-  return (
-    <div style={S.authRoot}>
-      <div style={S.authCard}>
-        <div style={S.authLogo}><span style={S.logoS}>S</span><span style={{ ...S.logoLabel, fontSize: "1.1rem" }}>CLARITY</span></div>
-        <p style={S.authTagline}>Tu coach de desarrollo profesional</p>
-        <form onSubmit={onSubmit} style={S.form}>
-          {authMode === "register" && (
-            <input style={S.input} type="text" placeholder="Tu nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
-          )}
-          <input style={S.input} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <input style={S.input} type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          {authError && <p style={S.errorText}>{authError}</p>}
-          <button style={S.primaryBtn} type="submit" disabled={authLoading}>
-            {authLoading ? "..." : authMode === "login" ? "Ingresar" : "Crear cuenta"}
-          </button>
-        </form>
-        <button style={S.switchBtn} onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}>
-          {authMode === "login" ? "¿Primera vez? Crear cuenta" : "Ya tengo cuenta"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function EmpresaScreen({ empresas, selectedEmpresa, setSelectedEmpresa, codigoEmpresa, setCodigoEmpresa, nombre, setNombre, error, loading, onSubmit, authMode }) {
-  return (
-    <div style={S.authRoot}>
-      <div style={S.authCard}>
-        <div style={S.authLogo}><span style={S.logoS}>S</span><span style={{ ...S.logoLabel, fontSize: "1.1rem" }}>CLARITY</span></div>
-        <p style={S.authTagline}>¿En qué organización trabajás?</p>
-        <p style={S.authSub}>El código te lo comparte tu empresa. Si no lo tenés, pedíselo a tu manager o a Recursos Humanos.</p>
-        <form onSubmit={onSubmit} style={S.form}>
-          {authMode === "register" && (
-            <input style={S.input} type="text" placeholder="Tu nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
-          )}
-          <select style={S.input} value={selectedEmpresa} onChange={(e) => setSelectedEmpresa(e.target.value)} required>
-            <option value="">Seleccioná tu empresa</option>
-            {empresas.map((em) => <option key={em.id} value={em.id}>{em.nombre}</option>)}
-          </select>
-          <input style={S.input} type="text" placeholder="Código de acceso (ej: CU2026)" value={codigoEmpresa} onChange={(e) => setCodigoEmpresa(e.target.value.toUpperCase())} required />
-          {error && <p style={S.errorText}>{error}</p>}
-          <button style={S.primaryBtn} type="submit" disabled={loading}>{loading ? "Validando..." : "Confirmar"}</button>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-function HdScreen({ hdTipo, setHdTipo, hdAutoridad, setHdAutoridad, hdPerfil, setHdPerfil, loading, onSubmit }) {
-  const tipos = ["Generador", "Generador Manifestante", "Proyector", "Manifestador", "Reflector"];
-  const autoridades = ["Sacral", "Emocional", "Esplénica", "Ego", "Self / G", "Mental / Sounding Board"];
-  const perfiles = ["1/3", "1/4", "2/4", "2/5", "3/5", "3/6", "4/6", "4/1", "5/1", "5/2", "6/2", "6/3"];
-  const complete = hdTipo && hdAutoridad && hdPerfil;
-  return (
-    <div style={S.authRoot}>
-      <div style={{ ...S.authCard, maxWidth: 480 }}>
-        <div style={S.authLogo}><span style={S.logoS}>S</span><span style={{ ...S.logoLabel, fontSize: "1.1rem" }}>CLARITY</span></div>
-        <p style={S.authTagline}>Tu diseño biológico</p>
-        <p style={S.authSub}>Esta información define cómo procesás decisiones, generás energía y te relacionás con otros. Es la base de todo lo que te voy a decir.</p>
-        <form onSubmit={onSubmit} style={S.form}>
-          <label style={S.fieldLabel}>Tipo</label>
-          <select style={S.input} value={hdTipo} onChange={(e) => setHdTipo(e.target.value)} required>
-            <option value="">Seleccioná tu tipo</option>
-            {tipos.map((t) => <option key={t}>{t}</option>)}
-          </select>
-          <label style={S.fieldLabel}>Autoridad</label>
-          <select style={S.input} value={hdAutoridad} onChange={(e) => setHdAutoridad(e.target.value)} required>
-            <option value="">Seleccioná tu autoridad</option>
-            {autoridades.map((a) => <option key={a}>{a}</option>)}
-          </select>
-          <label style={S.fieldLabel}>Perfil</label>
-          <select style={S.input} value={hdPerfil} onChange={(e) => setHdPerfil(e.target.value)} required>
-            <option value="">Seleccioná tu perfil</option>
-            {perfiles.map((p) => <option key={p}>{p}</option>)}
-          </select>
-          <p style={{ ...S.authSub, fontSize: "0.75rem", marginTop: 4 }}>
-            Si no conocés tu diseño, calculalo en{" "}
-            <a href="https://www.jovianarchive.com" target="_blank" rel="noreferrer" style={{ color: "#C4A882" }}>jovianarchive.com</a>
-            {" "}— solo necesitás fecha, hora y lugar de nacimiento.
-          </p>
-          <button style={{ ...S.primaryBtn, opacity: complete ? 1 : 0.5 }} type="submit" disabled={loading || !complete}>
-            {loading ? "Cargando..." : "Comenzar"}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-// ─── STYLES ───────────────────────────────────────────────────────────────────
-const C = {
-  bg: "#0E0D0C",
-  surface: "#1A1917",
-  border: "#2C2A27",
-  text: "#E8E4DF",
-  textMuted: "#6A6560",
-  accent: "#8B6F4E",
-  accentLight: "#C4A882",
-};
-
-const S = {
-  chatRoot: { display: "flex", flexDirection: "column", height: "100dvh", background: C.bg, color: C.text, fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "0.9375rem" },
-  fullCenter: { display: "flex", alignItems: "center", justifyContent: "center", height: "100dvh", background: C.bg },
-  pulsingDot: { width: 10, height: 10, borderRadius: "50%", background: C.accent, animation: "clarity-pulse 1.4s ease-in-out infinite" },
-
-  header: { borderBottom: `1px solid ${C.border}`, background: C.bg, position: "sticky", top: 0, zIndex: 10 },
-  headerInner: { maxWidth: 720, margin: "0 auto", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12 },
-  logoMark: { display: "flex", alignItems: "baseline", gap: 6, flex: 1 },
-  logoS: { fontWeight: 700, fontSize: "1.25rem", color: C.accentLight, letterSpacing: "-0.02em", fontFamily: "Georgia, serif" },
-  logoLabel: { fontSize: "0.68rem", letterSpacing: "0.2em", color: C.textMuted, fontWeight: 500, textTransform: "uppercase" },
-  empresaBadge: { fontSize: "0.72rem", color: C.textMuted, border: `1px solid ${C.border}`, borderRadius: 20, padding: "2px 10px" },
-  signOutBtn: { background: "none", border: "none", color: C.textMuted, cursor: "pointer", fontSize: "0.8rem", padding: "4px 8px", fontFamily: "inherit" },
-
-  messagesArea: { flex: 1, overflowY: "auto", padding: "24px 20px", display: "flex", flexDirection: "column", gap: 16, maxWidth: 720, width: "100%", margin: "0 auto", boxSizing: "border-box" },
-  welcomeCard: { margin: "auto", maxWidth: 460, textAlign: "center", padding: "48px 24px 32px" },
-  welcomeTitle: { fontSize: "1.2rem", fontWeight: 400, lineHeight: 1.5, color: C.text, margin: "0 0 12px", fontFamily: "Georgia, serif" },
-  welcomeSub: { fontSize: "0.875rem", color: C.textMuted, lineHeight: 1.65, margin: 0 },
-
-  bubbleRow: { display: "flex", alignItems: "flex-start", gap: 10 },
-  avatarDot: { width: 28, height: 28, borderRadius: "50%", background: C.surface, border: `1px solid ${C.border}`, flexShrink: 0, marginTop: 2 },
-  bubbleAssistant: { background: "#131211", border: `1px solid ${C.border}`, borderRadius: "4px 14px 14px 14px", padding: "12px 16px", lineHeight: 1.7, color: C.text, maxWidth: "82%", whiteSpace: "pre-wrap" },
-  bubbleUser: { background: C.surface, borderRadius: "14px 4px 14px 14px", padding: "12px 16px", lineHeight: 1.7, color: C.text, maxWidth: "72%", whiteSpace: "pre-wrap" },
-  typingBubble: { background: "#131211", border: `1px solid ${C.border}`, borderRadius: "4px 14px 14px 14px", padding: "14px 18px", display: "flex", gap: 5, alignItems: "center" },
-  dot1: { width: 6, height: 6, borderRadius: "50%", background: C.textMuted, display: "inline-block", animation: "clarity-blink 1.2s 0s infinite" },
-  dot2: { width: 6, height: 6, borderRadius: "50%", background: C.textMuted, display: "inline-block", animation: "clarity-blink 1.2s 0.2s infinite" },
-  dot3: { width: 6, height: 6, borderRadius: "50%", background: C.textMuted, display: "inline-block", animation: "clarity-blink 1.2s 0.4s infinite" },
-
-  chipsArea: { maxWidth: 720, width: "100%", margin: "0 auto", padding: "0 20px 12px", display: "flex", flexWrap: "wrap", gap: 8, boxSizing: "border-box" },
-  chip: { background: "none", border: `1px solid ${C.border}`, borderRadius: 20, padding: "7px 14px", color: C.textMuted, fontSize: "0.8rem", cursor: "pointer", fontFamily: "inherit" },
-
-  inputArea: { borderTop: `1px solid ${C.border}`, padding: "12px 20px 20px", background: C.bg },
-  inputWrapper: { maxWidth: 720, margin: "0 auto", display: "flex", alignItems: "flex-end", gap: 10, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "8px 8px 8px 14px" },
-  textarea: { flex: 1, background: "none", border: "none", outline: "none", color: C.text, fontSize: "0.9375rem", lineHeight: 1.6, resize: "none", fontFamily: "inherit", minHeight: 24, maxHeight: 160 },
-  sendBtn: { background: C.accent, border: "none", borderRadius: 8, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff", flexShrink: 0, transition: "opacity 0.15s" },
-  privacyNote: { maxWidth: 720, margin: "8px auto 0", fontSize: "0.7rem", color: C.textMuted, textAlign: "center" },
-
-  authRoot: { display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100dvh", background: C.bg, padding: 20, boxSizing: "border-box" },
-  authCard: { background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "36px 32px", width: "100%", maxWidth: 400 },
-  authLogo: { display: "flex", alignItems: "baseline", gap: 6, marginBottom: 10 },
-  authTagline: { fontSize: "1.05rem", fontWeight: 500, color: C.text, margin: "0 0 6px", fontFamily: "Georgia, serif" },
-  authSub: { fontSize: "0.82rem", color: C.textMuted, lineHeight: 1.6, margin: "0 0 20px" },
-  form: { display: "flex", flexDirection: "column", gap: 10 },
-  input: { background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 12px", color: C.text, fontSize: "0.9rem", fontFamily: "inherit", outline: "none", width: "100%", boxSizing: "border-box" },
-  fieldLabel: { fontSize: "0.78rem", color: C.textMuted, marginBottom: -4, display: "block" },
-  primaryBtn: { background: C.accent, border: "none", borderRadius: 8, padding: "11px 16px", color: "#fff", fontWeight: 600, fontSize: "0.9rem", cursor: "pointer", marginTop: 4, fontFamily: "inherit" },
-  switchBtn: { background: "none", border: "none", color: C.textMuted, fontSize: "0.82rem", cursor: "pointer", marginTop: 16, display: "block", width: "100%", textAlign: "center", fontFamily: "inherit" },
-  errorText: { color: "#E07070", fontSize: "0.82rem", margin: 0 },
-};
-
-// ─── ANIMATIONS ───────────────────────────────────────────────────────────────
-const styleEl = document.createElement("style");
-styleEl.textContent = `
-  @keyframes clarity-pulse { 0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1)} }
-  @keyframes clarity-blink { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
-  select option { background: #1A1917; color: #E8E4DF; }
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-thumb { background: #2C2A27; border-radius: 4px; }
-  textarea::placeholder { color: #3E3B38; }
-`;
-document.head.appendChild(styleEl);
