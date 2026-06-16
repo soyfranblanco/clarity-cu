@@ -664,7 +664,7 @@ function Chat({ go, profile, empresaData }) {
     if (txt !== "__CLARITY_START__") await saveMsg("user", txt);
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
