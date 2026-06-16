@@ -616,6 +616,15 @@ function Chat({ go, profile, empresaData }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [started, setStarted] = useState(false);
+  const [tab, setTab] = useState(null);
+
+  // Documentos
+  const [documentos, setDocumentos] = useState([]);
+  const [docNombre, setDocNombre] = useState("");
+  const [docTexto, setDocTexto] = useState("");
+  const [docModo, setDocModo] = useState("pdf");
+  const [docLoading, setDocLoading] = useState(false);
+  const docFileRef = useRef(null);
 
   const chatContainerRef = useRef(null);
   const lastAssistantRef = useRef(null);
@@ -627,16 +636,17 @@ function Chat({ go, profile, empresaData }) {
     ? `Tipo: ${profile.hd_tipo}\nAutoridad: ${profile.hd_autoridad}\nPerfil: ${profile.hd_perfil}`
     : null;
 
-  // Load history
+  const documentosActivos = documentos.filter((d) => d.activo);
+
+  // Load history + documentos
   useEffect(() => {
     if (!profile?.user_id) return;
     supabase.from("mensajes").select("role, content").eq("user_id", profile.user_id).order("created_at", { ascending: true })
       .then(({ data }) => {
-        if (data && data.length > 0) {
-          setMsgs(data);
-          setStarted(true);
-        }
+        if (data && data.length > 0) { setMsgs(data); setStarted(true); }
       });
+    supabase.from("clarity_documentos").select("*").eq("user_id", profile.user_id).order("created_at", { ascending: true })
+      .then(({ data }) => { if (data) setDocumentos(data); });
   }, [profile?.user_id]);
 
   // Scroll
@@ -649,8 +659,56 @@ function Chat({ go, profile, empresaData }) {
     }
   }, [msgs]);
 
+  async function subirDocumento() {
+    if (!docNombre.trim() || !docTexto.trim()) return;
+    setDocLoading(true);
+    const { data, error } = await supabase.from("clarity_documentos").insert({
+      user_id: profile.user_id, nombre: docNombre.trim(), contenido: docTexto.trim(), activo: true,
+    }).select().single();
+    if (!error && data) { setDocumentos((prev) => [...prev, data]); setDocNombre(""); setDocTexto(""); }
+    setDocLoading(false);
+  }
+
+  async function toggleDocumento(id, activo) {
+    await supabase.from("clarity_documentos").update({ activo: !activo }).eq("id", id);
+    setDocumentos((prev) => prev.map((d) => d.id === id ? { ...d, activo: !activo } : d));
+  }
+
+  async function eliminarDocumento(id) {
+    await supabase.from("clarity_documentos").delete().eq("id", id);
+    setDocumentos((prev) => prev.filter((d) => d.id !== id));
+  }
+
+  async function handleDocPdf(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert("El PDF supera los 5MB."); return; }
+    setDocLoading(true);
+    if (!docNombre.trim()) setDocNombre(file.name.replace(".pdf", ""));
+    try {
+      const base64 = await new Promise((res, rej) => {
+        const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.onerror = rej; r.readAsDataURL(file);
+      });
+      const resp = await fetch("/api/chat", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 4000, messages: [{ role: "user", content: [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } }, { type: "text", text: "Extraé todo el texto de este documento. Solo el texto, sin comentarios." }] }] }),
+      });
+      const data = await resp.json();
+      setDocTexto(data.content?.[0]?.text || "");
+    } catch { alert("No se pudo leer el PDF."); }
+    setDocLoading(false);
+    e.target.value = "";
+  }
+
   async function saveMsg(role, content) {
     await supabase.from("mensajes").insert({ user_id: profile.user_id, role, content });
+  }
+
+  function getSystemPrompt() {
+    const docsSection = documentosActivos.length > 0
+      ? `\n═══════════════════════════════════════\nDOCUMENTOS DEL EMPLEADO\n═══════════════════════════════════════\n${documentosActivos.map((d) => `--- ${d.nombre} ---\n${d.contenido.slice(0, 4000)}`).join("\n\n")}\n═══════════════════════════════════════\n`
+      : "";
+    return buildSystemPrompt(hdProfile, empresaData?.documentos_contexto || null) + docsSection;
   }
 
   async function send(t) {
@@ -670,7 +728,7 @@ function Chat({ go, profile, empresaData }) {
         body: JSON.stringify({
           model: "claude-sonnet-4-6",
           max_tokens: 1000,
-          system: buildSystemPrompt(hdProfile, empresaData?.documentos_contexto || null),
+          system: getSystemPrompt(),
           messages: next,
         }),
       });
@@ -727,6 +785,74 @@ function Chat({ go, profile, empresaData }) {
           </button>
         </div>
       </div>
+
+      {/* Tab bar */}
+      <div style={{ borderBottom: "1px solid rgba(184,154,78,.15)", display: "flex", alignItems: "center", paddingLeft: "1rem" }}>
+        <button
+          onClick={() => setTab(tab === "documentos" ? null : "documentos")}
+          style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "monospace", fontSize: ".58rem", letterSpacing: ".25em", textTransform: "uppercase", padding: ".5rem .9rem", color: tab === "documentos" ? DC.gold : DC.dim, borderBottom: tab === "documentos" ? `1px solid ${DC.gold}` : "1px solid transparent", marginBottom: -1 }}>
+          Mis documentos {documentosActivos.length > 0 && `(${documentosActivos.length})`}
+        </button>
+      </div>
+
+      {/* Documentos panel */}
+      {tab === "documentos" && (
+        <div style={{ padding: "1.2rem 2rem", borderBottom: "1px solid rgba(184,154,78,.1)", background: darkMode ? "rgba(255,255,255,.02)" : "rgba(0,0,0,.03)", display: "flex", flexDirection: "column", gap: "1rem", maxHeight: "55vh", overflowY: "auto" }}>
+
+          {documentos.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: ".5rem" }}>
+              <div style={{ fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".3em", color: DC.gold, textTransform: "uppercase", marginBottom: ".3rem" }}>
+                Tus documentos ({documentosActivos.length} activos)
+              </div>
+              {documentos.map((d) => (
+                <div key={d.id} style={{ display: "flex", alignItems: "center", gap: ".6rem", padding: ".6rem .8rem", border: `1px solid ${d.activo ? "rgba(184,154,78,.3)" : "rgba(184,154,78,.1)"}`, borderRadius: 8, background: d.activo ? "rgba(184,154,78,.05)" : "transparent" }}>
+                  <button onClick={() => toggleDocumento(d.id, d.activo)}
+                    style={{ width: 18, height: 18, borderRadius: 4, border: `1px solid ${d.activo ? DC.gold : "rgba(184,154,78,.3)"}`, background: d.activo ? DC.gold : "transparent", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".6rem", color: d.activo ? DC.bg : DC.dim }}>
+                    {d.activo ? "✓" : ""}
+                  </button>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: ".82rem", color: d.activo ? DC.txt : DC.dim, fontFamily: NUNITO, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.nombre}</div>
+                    <div style={{ fontSize: ".68rem", color: DC.dim, fontFamily: "monospace" }}>{Math.round(d.contenido.length / 4)} palabras aprox.</div>
+                  </div>
+                  <button onClick={() => eliminarDocumento(d.id)} style={{ background: "none", border: "none", color: DC.dim, cursor: "pointer", fontSize: ".9rem", flexShrink: 0 }}>×</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{ borderTop: documentos.length > 0 ? "1px solid rgba(184,154,78,.1)" : "none", paddingTop: documentos.length > 0 ? "1rem" : 0 }}>
+            <div style={{ fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".3em", color: DC.gold, textTransform: "uppercase", marginBottom: ".6rem" }}>Agregar documento</div>
+            <div style={{ display: "flex", gap: ".4rem", marginBottom: ".7rem" }}>
+              {["pdf", "texto"].map((m) => (
+                <button key={m} onClick={() => setDocModo(m)}
+                  style={{ background: docModo === m ? "rgba(184,154,78,.15)" : "transparent", border: `1px solid ${docModo === m ? DC.gold : "rgba(184,154,78,.2)"}`, borderRadius: 20, color: docModo === m ? DC.gold : DC.dim, fontFamily: "monospace", fontSize: ".48rem", letterSpacing: ".15em", padding: ".3em .8em", cursor: "pointer", textTransform: "uppercase" }}>
+                  {m === "pdf" ? "PDF" : "Texto"}
+                </button>
+              ))}
+            </div>
+            <input value={docNombre} onChange={(e) => setDocNombre(e.target.value)} placeholder="Nombre del documento"
+              style={{ width: "100%", background: "transparent", border: "none", borderBottom: "1px solid rgba(184,154,78,.2)", color: DC.txt, fontFamily: NUNITO, fontSize: ".82rem", padding: ".4rem 0", outline: "none", marginBottom: ".7rem", boxSizing: "border-box" }} />
+            {docModo === "pdf" ? (
+              <div>
+                <input ref={docFileRef} type="file" accept=".pdf" onChange={handleDocPdf} style={{ display: "none" }} />
+                <button onClick={() => docFileRef.current?.click()} disabled={docLoading}
+                  style={{ width: "100%", border: "2px dashed rgba(184,154,78,.25)", borderRadius: 8, padding: ".8rem", background: "transparent", color: DC.dim, fontFamily: NUNITO, fontSize: ".8rem", cursor: docLoading ? "wait" : "pointer", textAlign: "center" }}>
+                  {docLoading ? "Leyendo PDF..." : docTexto ? "✓ PDF leído — hacé clic en Guardar" : "Hacé clic para seleccionar PDF"}
+                </button>
+              </div>
+            ) : (
+              <textarea value={docTexto} onChange={(e) => setDocTexto(e.target.value)} placeholder="Pegá el contenido acá..."
+                style={{ width: "100%", background: "transparent", border: "1px solid rgba(184,154,78,.2)", borderRadius: 8, color: DC.txt, fontFamily: NUNITO, fontSize: ".82rem", padding: ".6rem", outline: "none", resize: "vertical", lineHeight: 1.6, minHeight: 100, boxSizing: "border-box" }} />
+            )}
+            {docTexto && (
+              <button onClick={subirDocumento} disabled={docLoading || !docNombre.trim()}
+                style={{ marginTop: ".6rem", background: DC.gold, color: DC.bg, border: "none", borderRadius: 20, fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".2em", padding: ".6em 1.5em", cursor: docLoading || !docNombre.trim() ? "not-allowed" : "pointer", textTransform: "uppercase", opacity: docLoading || !docNombre.trim() ? 0.5 : 1 }}>
+                Guardar documento
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Chat area */}
       <div style={{ flex: 1, maxWidth: 900, margin: "0 auto", width: "100%", padding: "0 clamp(60px,10vw,150px)", display: "flex", flexDirection: "column" }}>
